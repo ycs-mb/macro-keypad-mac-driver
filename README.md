@@ -9,7 +9,10 @@
 [![macOS](https://img.shields.io/badge/macOS-13.0%2B-blue?logo=apple)](https://www.apple.com/macos/)
 [![Tauri](https://img.shields.io/badge/Tauri-v2-orange?logo=tauri)](https://v2.tauri.app/)
 [![Rust](https://img.shields.io/badge/Rust-1.78%2B-orange?logo=rust)](https://www.rust-lang.org/)
+[![Release](https://img.shields.io/github/v/release/ycs-mb/macro-keypad-mac-driver?color=brightgreen)](https://github.com/ycs-mb/macro-keypad-mac-driver/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-green)](#)
+
+[**⬇ Download MacroPad v1.0.0**](https://github.com/ycs-mb/macro-keypad-mac-driver/releases/latest/download/MacroPad_1.0.0_aarch64.dmg)
 
 > The K809 has **no official macOS driver**. MacroPad gives it one — a native `.app` that configures all 20 keys visually, installs the Karabiner-Elements profile with one click, and monitors device connection in the menu bar.
 
@@ -116,11 +119,10 @@ All actions are fully customisable in the Configurator.
 
 ### Option A — Download the app (recommended)
 
-1. Go to [**Releases**](https://github.com/ycs-mb/macro-keypad-mac-driver/releases)
-2. Download `MacroPad_1.0.0_universal.dmg` (or the `_aarch64.dmg` for Apple Silicon)
-3. Open the DMG → drag **MacroPad.app** to `/Applications`
-4. **Right-click → Open** on first launch (bypasses Gatekeeper for unsigned app)
-5. The menu bar icon appears — MacroPad is running
+1. **[Download MacroPad_1.0.0_aarch64.dmg](https://github.com/ycs-mb/macro-keypad-mac-driver/releases/latest/download/MacroPad_1.0.0_aarch64.dmg)** (Apple Silicon)
+2. Open the DMG → drag **MacroPad.app** to `/Applications`
+3. **Right-click → Open** on first launch (bypasses Gatekeeper for unsigned app)
+4. The menu bar icon appears — MacroPad is running
 
 ### Option B — Build from source
 

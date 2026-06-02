@@ -150,14 +150,50 @@
 
   /* ─── MAIN LAYOUT ─── */
   main {
-    display: grid;
-    grid-template-columns: 580px 1fr;
+    display: flex;
+    flex-direction: row;
     overflow: hidden;
+  }
+
+  /* ─── PANEL RESIZE HANDLE ─── */
+  .panel-resize-handle {
+    width: 5px;
+    min-width: 5px;
+    flex-shrink: 0;
+    background: var(--border-subtle);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    cursor: col-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: background 0.15s ease;
+    user-select: none;
+    z-index: 10;
+  }
+  .panel-resize-handle:hover,
+  .panel-resize-handle.dragging {
+    background: rgba(108, 99, 255, 0.25);
+    border-color: rgba(108, 99, 255, 0.5);
+  }
+  .panel-resize-handle::after {
+    content: '⋮';
+    font-size: 14px;
+    color: var(--text-muted);
+    letter-spacing: -2px;
+    pointer-events: none;
+  }
+  .panel-resize-handle:hover::after,
+  .panel-resize-handle.dragging::after {
+    color: rgba(108, 99, 255, 0.8);
   }
 
   /* ─── LEFT: KEYPAD PANEL ─── */
   .keypad-panel {
-    border-right: 1px solid var(--border);
+    width: 580px;
+    min-width: 280px;
+    flex-shrink: 0;
     background: var(--bg-raised);
     display: flex;
     flex-direction: column;
@@ -464,6 +500,8 @@
 
   /* ─── RIGHT: CONFIG PANEL ─── */
   .config-panel {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -1294,6 +1332,9 @@
         <div class="legend-item"><span class="legend-dot" style="background:var(--c-none)"></span>Not Configured</div>
       </div>
     </div>
+
+    <!-- RESIZE HANDLE -->
+    <div class="panel-resize-handle" id="panelResizeHandle" title="Drag to resize panels"></div>
 
     <!-- RIGHT: Config Panel -->
     <div class="config-panel">
@@ -2312,6 +2353,56 @@ function init3DDrag() {
 (function() {
   const btn = document.getElementById('btnApplyDirect');
   if (btn) btn.style.display = 'inline-flex';
+})();
+
+// ─────────────────────────────────────────────────────
+// PANEL RESIZE
+// ─────────────────────────────────────────────────────
+(function initPanelResize() {
+  const STORAGE_KEY = 'macropad-panel-width';
+  const MIN_WIDTH = 280;
+  const MAX_RATIO = 0.70;
+
+  const handle = document.getElementById('panelResizeHandle');
+  const keypadPanel = document.querySelector('.keypad-panel');
+  if (!handle || !keypadPanel) return;
+
+  // Restore saved width
+  const savedWidth = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+  if (savedWidth && savedWidth >= MIN_WIDTH) {
+    keypadPanel.style.width = savedWidth + 'px';
+  }
+
+  let isDragging = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  handle.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    isDragging = true;
+    startX = e.clientX;
+    startWidth = keypadPanel.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    const delta = e.clientX - startX;
+    const maxWidth = Math.floor(window.innerWidth * MAX_RATIO);
+    const newWidth = Math.max(MIN_WIDTH, Math.min(maxWidth, startWidth + delta));
+    keypadPanel.style.width = newWidth + 'px';
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!isDragging) return;
+    isDragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    localStorage.setItem(STORAGE_KEY, keypadPanel.offsetWidth);
+  });
 })();
 
 // ─────────────────────────────────────────────────────

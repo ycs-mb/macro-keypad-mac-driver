@@ -416,6 +416,33 @@
     100% { filter: brightness(1); }
   }
 
+  /* ── Press-down physical feel ── */
+  .key.key-pressing {
+    transform: scale(0.88) translateY(3px) !important;
+    filter: brightness(0.75) !important;
+    transition: transform 80ms ease-in, filter 80ms ease-in !important;
+  }
+
+  /* ── Release pop (spring overshoot) ── */
+  @keyframes key-pop {
+    0%   { transform: scale(0.88) translateY(3px); }
+    50%  { transform: scale(1.12) translateY(0); }
+    100% { transform: scale(1.0) translateY(0); }
+  }
+  .key.key-pop {
+    animation: key-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* ── First-pass glow burst ── */
+  @keyframes key-pass-burst {
+    0%   { box-shadow: 0 3px 6px rgba(0,0,0,0.5), 0 0 20px var(--green-glow), inset 0 1px 0 rgba(52,211,153,0.08); }
+    40%  { box-shadow: 0 3px 6px rgba(0,0,0,0.5), 0 0 32px rgba(52,211,153,0.75), 0 0 56px rgba(52,211,153,0.45), inset 0 1px 0 rgba(52,211,153,0.15); }
+    100% { box-shadow: 0 3px 6px rgba(0,0,0,0.5), 0 0 20px var(--green-glow), inset 0 1px 0 rgba(52,211,153,0.08); }
+  }
+  .key.key-pass-burst {
+    animation: key-pass-burst 400ms ease-out forwards;
+  }
+
   /* ─── LEGEND ─── */
   .legend {
     display: flex; gap: 16px; flex-wrap: wrap;
@@ -1263,6 +1290,46 @@ keys.forEach(k => {
 const state = {};
 KEYS.forEach(k => state[k.id] = 'untested');
 
+// Track which key is currently physically held down (for press/release animations)
+let pressedKeyId = null;
+let pressedKeyFreshPass = false;
+
+// Helper: apply key-pressing class to a 2D key element
+function applyPressing(id, freshPass) {
+  const el = document.getElementById(`key-${id}`);
+  if (el) {
+    el.classList.remove('key-pop', 'key-pass-burst');
+    el.classList.add('key-pressing');
+  }
+  pressedKeyId = id;
+  pressedKeyFreshPass = !!freshPass;
+}
+
+// Helper: trigger release-pop and optional pass-burst on a 2D key element
+function applyRelease(id, wasFreshPass) {
+  const el = document.getElementById(`key-${id}`);
+  if (el) {
+    el.classList.remove('key-pressing');
+    el.classList.add('key-pop');
+    el.addEventListener('animationend', function onPop(evt) {
+      if (evt.animationName === 'key-pop') {
+        el.classList.remove('key-pop');
+        el.removeEventListener('animationend', onPop);
+        if (wasFreshPass) {
+          el.classList.add('key-pass-burst');
+          el.addEventListener('animationend', function onBurst(evt2) {
+            if (evt2.animationName === 'key-pass-burst') {
+              el.classList.remove('key-pass-burst');
+              el.removeEventListener('animationend', onBurst);
+            }
+          });
+        }
+      }
+    });
+  }
+  pressedKeyId = null;
+}
+
 // ─────────────────────────────────────────────────────
 // RENDER KEYPAD
 // ─────────────────────────────────────────────────────
@@ -1475,6 +1542,7 @@ document.addEventListener('keydown', function(e) {
     );
     renderKeypad();
     flashKey(padKeyId);
+    applyPressing(padKeyId, false);
     return;
   }
 
@@ -1489,6 +1557,8 @@ document.addEventListener('keydown', function(e) {
 
   if (remapMatch !== null) {
     e.preventDefault();
+    // Track whether this is a fresh pass (untested → pass)
+    const wasFreshPass = state[remapMatch] === 'untested';
     // Only auto-pass if it wasn't already manually tested
     if (state[remapMatch] !== 'pass') {
       state[remapMatch] = 'pass';
@@ -1500,6 +1570,7 @@ document.addEventListener('keydown', function(e) {
     );
     renderKeypad();
     flashKey(remapMatch);
+    applyPressing(remapMatch, wasFreshPass);
     return;
   }
 
@@ -1529,6 +1600,13 @@ document.addEventListener('keydown', function(e) {
   addLog('INFO', 'log-tag-info',
     `<strong>${modStr}${e.code}</strong> (key: "${e.key}") — not a pad raw code`
   );
+});
+
+document.addEventListener('keyup', function() {
+  // Release the pressed key animation
+  if (pressedKeyId !== null) {
+    applyRelease(pressedKeyId, pressedKeyFreshPass);
+  }
 });
 
 // ─────────────────────────────────────────────────────
