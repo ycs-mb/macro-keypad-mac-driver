@@ -1,0 +1,426 @@
+{
+    "profiles": [
+        {
+            "devices": [
+                {
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "product_id": 9040,
+                        "vendor_id": 12538
+                    },
+                    "manipulate_caps_lock_led": false
+                }
+            ],
+            "name": "Default profile"
+        },
+        {
+            "complex_modifications": {
+                "rules": [
+                    { "eval_js": "// JavaScript must be written in ECMAScript 5.1.\n// INSTANT 19-Key Macro Pad — Karabiner complex_modifications generator\n// Device: INSTANT (vendor_id: 12538 / 0x30FA, product_id: 9040 / 0x2350)\n\nfunction main() {\n  var DEVICE_CONDITION = {\n    type: 'device_if',\n    identifiers: [{ vendor_id: 12538, product_id: 9040 }]\n  };\n\n  // to_type:\n  //   'shell'    → shell_command string\n  //   'key'      → key_code (+ optional mods array)\n  //   'consumer' → consumer_key_code (media keys)\n  var keys = [\n    { num: 1,  from: 'a',             to_type: 'shell',    to: \"open -a 'Terminal'\" },\n    { num: 2,  from: 'b',             to_type: 'shell',    to: \"open -a 'Visual Studio Code'\" },\n    { num: 3,  from: 'c',             to_type: 'shell',    to: \"open -a 'Safari'\" },\n    { num: 4,  from: 'd',             to_type: 'key',      to: 'mission_control' },\n    { num: 5,  from: 'e',             to_type: 'key',      to: 'f',        mods: ['left_command', 'left_control'] },\n    { num: 6,  from: 'f',             to_type: 'key',      to: 'spacebar', mods: ['left_command'] },\n    { num: 7,  from: 'g',             to_type: 'key',      to: 'z',        mods: ['left_command'] },\n    { num: 8,  from: 'h',             to_type: 'key',      to: 'z',        mods: ['left_command', 'left_shift'] },\n    { num: 9,  from: 'i',             to_type: 'key',      to: 'c',        mods: ['left_command'] },\n    { num: 10, from: 'j',             to_type: 'key',      to: 'v',        mods: ['left_command'] },\n    { num: 11, from: 'keypad_period', to_type: 'key',      to: 'x',        mods: ['left_command'] },\n    { num: 12, from: 'keypad_enter',  to_type: 'shell',    to: \"screencapture -i ~/Desktop/screenshot-$(date +%Y%m%d-%H%M%S).png\" },\n    { num: 13, from: 'keypad_hyphen', to_type: 'consumer', to: 'play_or_pause' },\n    { num: 14, from: 'keypad_plus',   to_type: 'consumer', to: 'fast_forward' },\n    { num: 15, from: 'spacebar',      to_type: 'consumer', to: 'rewind' },\n    { num: 16, from: 'down_arrow',    to_type: 'shell',    to: \"open -a 'Finder'\" },\n    { num: 17, from: 'left_arrow',    to_type: 'shell',    to: \"open -a 'System Settings'\" },\n    { num: 18, from: 'right_arrow',   to_type: 'key',      to: 'tab',      mods: ['left_command'] },\n    { num: 19, from: 'up_arrow',      to_type: 'key',      to: 'tab',      mods: ['left_command', 'left_shift'] }\n  ];\n\n  var manipulators = [];\n\n  for (var i = 0; i < keys.length; i++) {\n    var k = keys[i];\n    var toAction;\n\n    if (k.to_type === 'shell') {\n      toAction = { shell_command: k.to };\n    } else if (k.to_type === 'consumer') {\n      toAction = { consumer_key_code: k.to };\n    } else {\n      toAction = { key_code: k.to };\n      if (k.mods) { toAction.modifiers = k.mods; }\n    }\n\n    console.log('Key ' + k.num + ': ' + k.from + ' → [' + k.to_type + '] ' + k.to);\n\n    manipulators.push({\n      type: 'basic',\n      description: 'Key ' + k.num + ' (' + k.from + ')',\n      conditions: [DEVICE_CONDITION],\n      from: { key_code: k.from },\n      to: [toAction]\n    });\n  }\n\n  return {\n    description: 'INSTANT 19-Key Macro Pad',\n    manipulators: manipulators\n  };\n}\n\nmain();\n" },
+                    {
+                        "description": "INSTANT 19-Key Macro Pad",
+                        "enabled": false,
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 1 (1)",
+                                "from": { "key_code": "1" },
+                                "to": [{ "shell_command": "open -a 'Terminal'" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 2 (b)",
+                                "from": { "key_code": "b" },
+                                "to": [{ "shell_command": "open -a 'Visual Studio Code'" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 3 (c)",
+                                "from": { "key_code": "c" },
+                                "to": [{ "shell_command": "open -a 'Safari'" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 4 (d)",
+                                "from": { "key_code": "d" },
+                                "to": [{ "key_code": "mission_control" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 5 (e)",
+                                "from": { "key_code": "e" },
+                                "to": [
+                                    {
+                                        "key_code": "f",
+                                        "modifiers": ["left_command", "left_control"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 6 (f)",
+                                "from": { "key_code": "f" },
+                                "to": [
+                                    {
+                                        "key_code": "spacebar",
+                                        "modifiers": ["left_command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 7 (g)",
+                                "from": { "key_code": "g" },
+                                "to": [
+                                    {
+                                        "key_code": "z",
+                                        "modifiers": ["left_command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 8 (h)",
+                                "from": { "key_code": "h" },
+                                "to": [
+                                    {
+                                        "key_code": "z",
+                                        "modifiers": ["left_command", "left_shift"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 9 (i)",
+                                "from": { "key_code": "i" },
+                                "to": [
+                                    {
+                                        "key_code": "c",
+                                        "modifiers": ["left_command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 10 (j)",
+                                "from": { "key_code": "j" },
+                                "to": [
+                                    {
+                                        "key_code": "v",
+                                        "modifiers": ["left_command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 11 (keypad_period)",
+                                "from": { "key_code": "keypad_period" },
+                                "to": [
+                                    {
+                                        "key_code": "x",
+                                        "modifiers": ["left_command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 12 (keypad_enter)",
+                                "from": { "key_code": "keypad_enter" },
+                                "to": [{ "shell_command": "screencapture -i ~/Desktop/screenshot-$(date +%Y%m%d-%H%M%S).png" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 13 (keypad_hyphen)",
+                                "from": { "key_code": "keypad_hyphen" },
+                                "to": [{ "consumer_key_code": "play_or_pause" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 14 (keypad_plus)",
+                                "from": { "key_code": "keypad_plus" },
+                                "to": [{ "consumer_key_code": "fast_forward" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 15 (spacebar)",
+                                "from": { "key_code": "spacebar" },
+                                "to": [{ "consumer_key_code": "rewind" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 16 (down_arrow)",
+                                "from": { "key_code": "down_arrow" },
+                                "to": [{ "shell_command": "open -a 'Finder'" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 17 (left_arrow)",
+                                "from": { "key_code": "left_arrow" },
+                                "to": [{ "shell_command": "open -a 'System Settings'" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 18 (right_arrow)",
+                                "from": { "key_code": "right_arrow" },
+                                "to": [
+                                    {
+                                        "key_code": "tab",
+                                        "modifiers": ["left_command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 9040,
+                                                "vendor_id": 12538
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "description": "Key 19 (up_arrow)",
+                                "from": { "key_code": "up_arrow" },
+                                "to": [
+                                    {
+                                        "key_code": "tab",
+                                        "modifiers": ["left_command", "left_shift"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "devices": [
+                {
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "is_pointing_device": true,
+                        "product_id": 9040,
+                        "vendor_id": 12538
+                    },
+                    "ignore": false
+                },
+                {
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "product_id": 9040,
+                        "vendor_id": 12538
+                    },
+                    "simple_modifications": [
+                        {
+                            "from": { "key_code": "1" },
+                            "to": [{ "key_code": "caps_lock" }]
+                        }
+                    ]
+                }
+            ],
+            "name": "INSTANT 19-Key Macro Pad",
+            "selected": true,
+            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+        }
+    ],
+    "selected": "INSTANT 19-Key Macro Pad"
+}

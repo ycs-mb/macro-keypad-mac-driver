@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacroPad · Key Configurator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-base:       #07070E;
+    --bg-raised:     #0D0D1A;
+    --bg-elevated:   #13131F;
+    --bg-key:        #161625;
+    --bg-key-top:    #1C1C30;
+    --border:        #252538;
+    --border-subtle: #1A1A28;
+    --amber:         #FFB800;
+    --amber-dim:     rgba(255,184,0,0.12);
+    --amber-glow:    rgba(255,184,0,0.25);
+    --text-primary:  #EEEEFF;
+    --text-secondary:#7070A0;
+    --text-muted:    #404060;
+
+    --c-shell:   #FF6B35;
+    --c-key:     #818CF8;
+    --c-media:   #34D399;
+    --c-app:     #FBBF24;
+    --c-text:    #E879F9;
+    --c-none:    #334155;
+
+    --radius:    8px;
+    --radius-sm: 5px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+  }
+
+  /* ─── SCANLINE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* ─── GRID BACKGROUND ─── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,184,0,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,184,0,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: 52px 1fr 48px;
+    height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(7,7,14,0.95);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 2px;
+  }
+  .logo-icon span {
+    background: var(--amber);
+    border-radius: 2px;
+    opacity: 0.7;
+  }
+  .logo-icon span:nth-child(2) { opacity: 0.4; }
+  .logo-icon span:nth-child(5) { opacity: 1; }
+  .logo-icon span:nth-child(8) { opacity: 0.5; }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba(0,212,160,0.08);
+    border: 1px solid rgba(0,212,160,0.2);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #34D399;
+    letter-spacing: 0.05em;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #34D399;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  main {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    overflow: hidden;
+  }
+
+  /* ─── LEFT: KEYPAD PANEL ─── */
+  .keypad-panel {
+    border-right: 1px solid var(--border);
+    background: var(--bg-raised);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 18px;
+    overflow-y: auto;
+  }
+
+  .device-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .device-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+  }
+  .device-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .section-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  /* ─── THE KEYPAD GRID ─── */
+  .keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(5, auto);
+    gap: 7px;
+  }
+
+  /* Last row: 3 keys centered using grid-column */
+  .key-row-last {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+  }
+  .key-row-last .key:first-child { grid-column: 2; }
+
+  .key {
+    position: relative;
+    aspect-ratio: 1;
+    background: linear-gradient(165deg, var(--bg-key-top) 0%, var(--bg-key) 100%);
+    border: 1px solid var(--border);
+    border-bottom: 3px solid #0A0A16;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 4px;
+    transition: all 130ms ease;
+    box-shadow:
+      0 3px 6px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    user-select: none;
+  }
+
+  .key:hover {
+    border-color: var(--amber);
+    box-shadow:
+      0 3px 6px rgba(0,0,0,0.5),
+      0 0 18px var(--amber-glow),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    transform: translateY(-1px);
+  }
+
+  .key:active {
+    transform: translateY(2px);
+    border-bottom-width: 1px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+
+  .key.selected {
+    background: linear-gradient(165deg, #21190A 0%, #16100A 100%);
+    border-color: var(--amber);
+    border-bottom-color: #0A0800;
+    box-shadow:
+      0 3px 6px rgba(0,0,0,0.5),
+      0 0 24px var(--amber-glow),
+      inset 0 1px 0 rgba(255,184,0,0.08);
+  }
+
+  .key-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .key-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.2;
+    word-break: break-all;
+    max-width: 100%;
+    padding: 0 2px;
+  }
+
+  .key.selected .key-label { color: var(--amber); }
+
+  .key-type-dot {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+
+  /* ─── KEY LEGEND ─── */
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ─── RIGHT: CONFIG PANEL ─── */
+  .config-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-base);
+  }
+
+  /* Empty state */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 40px;
+  }
+  .empty-icon {
+    display: grid;
+    grid-template-columns: repeat(4, 20px);
+    grid-template-rows: repeat(2, 20px);
+    gap: 3px;
+    opacity: 0.15;
+  }
+  .empty-icon span {
+    background: var(--amber);
+    border-radius: 3px;
+  }
+  .empty-state h3 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .empty-state p {
+    font-size: 13px;
+    color: var(--text-muted);
+    max-width: 240px;
+    line-height: 1.6;
+  }
+
+  /* Config form */
+  .config-form {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+  .config-form.visible { display: flex; }
+
+  .config-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .config-key-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .config-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.04em;
+    color: var(--text-primary);
+  }
+
+  .config-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Form groups */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .field-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .field-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-top: -3px;
+  }
+
+  input[type="text"], textarea, select {
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    appearance: none;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px var(--amber-dim);
+  }
+  select option { background: var(--bg-elevated); }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+
+  /* Action type selector */
+  .action-types {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .action-type-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    transition: all 150ms ease;
+  }
+  .action-type-btn:hover { border-color: var(--border-subtle); color: var(--text-secondary); }
+  .action-type-btn.active {
+    border-color: currentColor;
+    background: rgba(255,255,255,0.04);
+  }
+  .action-type-btn .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .action-type-btn[data-type="shell"]   { color: var(--c-shell);  }
+  .action-type-btn[data-type="key"]     { color: var(--c-key);    }
+  .action-type-btn[data-type="media"]   { color: var(--c-media);  }
+  .action-type-btn[data-type="app"]     { color: var(--c-app);    }
+  .action-type-btn[data-type="text"]    { color: var(--c-text);   }
+  .action-type-btn:not(.active)         { color: var(--text-muted); }
+
+  /* Sub-fields per action type */
+  .action-fields { display: none; flex-direction: column; gap: 14px; }
+  .action-fields.visible { display: flex; }
+
+  /* Modifier chips */
+  .mod-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .mod-chip {
+    padding: 4px 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 130ms ease;
+    user-select: none;
+  }
+  .mod-chip.active {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  /* Media key grid */
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .media-btn {
+    padding: 8px 6px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-align: center;
+    transition: all 130ms ease;
+    user-select: none;
+  }
+  .media-btn.active {
+    background: rgba(52,211,153,0.1);
+    border-color: var(--c-media);
+    color: var(--c-media);
+  }
+  .media-btn:hover:not(.active) { border-color: var(--text-muted); }
+
+  /* Save area */
+  .config-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 150ms ease;
+  }
+  .btn-primary {
+    background: var(--amber);
+    color: #080808;
+  }
+  .btn-primary:hover { background: #FFCA40; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--amber); color: var(--amber); }
+  .btn-danger {
+    background: transparent;
+    color: #FF4444;
+    border: 1px solid rgba(255,68,68,0.25);
+  }
+  .btn-danger:hover { background: rgba(255,68,68,0.08); }
+  .btn-sm { padding: 5px 11px; font-size: 11px; }
+
+  /* ─── JSON OUTPUT (right side bottom or tab) ─── */
+  .json-panel {
+    border-left: 1px solid var(--border);
+    width: 360px;
+    background: var(--bg-raised);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 300ms ease;
+  }
+  .json-panel.collapsed { width: 0; overflow: hidden; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-top: 1px solid var(--border);
+    background: rgba(7,7,14,0.95);
+    backdrop-filter: blur(12px);
+    gap: 12px;
+  }
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .footer-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── JSON VIEWER ─── */
+  .json-viewer-wrap {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .json-viewer-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .json-viewer-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .json-code {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    white-space: pre;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 64px;
+    left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    padding: 8px 18px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--amber);
+    border-radius: 100px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--amber);
+    opacity: 0;
+    transition: all 300ms ease;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── HEADER ─── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      MacroPad
+    </div>
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      INSTANT · VID:30FA · PID:2350
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" onclick="resetToDefaults()">Reset</button>
+      <button class="btn btn-ghost btn-sm" onclick="importJSON()">Import JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+    </div>
+  </header>
+
+  <!-- ─── MAIN ─── -->
+  <main>
+
+    <!-- LEFT: Keypad -->
+    <div class="keypad-panel">
+      <div class="device-card">
+        <div class="device-name">INSTANT 19-Key Macro Pad</div>
+        <div class="device-meta">USB HID · Low Speed · Configured via Karabiner-Elements</div>
+      </div>
+
+      <div class="section-label">Layout</div>
+
+      <div class="keypad-grid" id="keypadGrid">
+        <!-- keys injected by JS -->
+      </div>
+
+      <div class="section-label">Legend</div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-shell)"></span>Shell Command</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-key)"></span>Key Shortcut</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-media)"></span>Media Control</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-app)"></span>Open App</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-text)"></span>Type Text</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-none)"></span>Not Configured</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Config Panel -->
+    <div class="config-panel">
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <h3>Select a Key</h3>
+        <p>Click any key on the pad to configure its action, shortcut, or shell command.</p>
+      </div>
+
+      <!-- Config form -->
+      <div class="config-form" id="configForm">
+        <div class="config-header">
+          <div>
+            <div class="config-key-id" id="cfgKeyId">KEY 01</div>
+            <div class="config-title" id="cfgTitle">Untitled Key</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="clearKey()">Clear</button>
+        </div>
+
+        <div class="config-body">
+
+          <!-- Label -->
+          <div class="field">
+            <div class="field-label">Display Label</div>
+            <input type="text" id="fLabel" placeholder="e.g. Terminal, Play/Pause…" oninput="onLabelInput()">
+          </div>
+
+          <!-- From key code -->
+          <div class="field">
+            <div class="field-label">Hardware Key Code</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <select id="fFromKeyType" style="width:auto;flex-shrink:0;font-size:11px;padding:9px 8px">
+                <option value="consumer_key_code">consumer_key_code</option>
+                <option value="key_code">key_code</option>
+              </select>
+              <input type="text" id="fFromKey" placeholder="e.g. volume_increment, play_or_pause…" style="flex:1">
+            </div>
+            <div class="field-hint">Open Karabiner-EventViewer, press the key, copy the code shown under <code style="color:var(--amber);font-family:JetBrains Mono,monospace">name</code>. This pad uses <code style="color:var(--amber);font-family:JetBrains Mono,monospace">consumer_key_code</code>.</div>
+          </div>
+
+          <!-- Action type -->
+          <div class="field">
+            <div class="field-label">Action Type</div>
+            <div class="action-types">
+              <button class="action-type-btn" data-type="shell" onclick="setActionType('shell')">
+                <span class="dot"></span>Shell
+              </button>
+              <button class="action-type-btn" data-type="key" onclick="setActionType('key')">
+                <span class="dot"></span>Shortcut
+              </button>
+              <button class="action-type-btn" data-type="media" onclick="setActionType('media')">
+                <span class="dot"></span>Media
+              </button>
+              <button class="action-type-btn" data-type="app" onclick="setActionType('app')">
+                <span class="dot"></span>App
+              </button>
+              <button class="action-type-btn" data-type="text" onclick="setActionType('text')">
+                <span class="dot"></span>Text
+              </button>
+            </div>
+          </div>
+
+          <!-- Shell fields -->
+          <div class="action-fields" id="fields-shell">
+            <div class="field">
+              <div class="field-label">Shell Command</div>
+              <textarea id="fShellCmd" placeholder="open -a 'Terminal'&#10;osascript -e 'set volume 50'&#10;screencapture -i ~/Desktop/shot.png"></textarea>
+            </div>
+          </div>
+
+          <!-- Key Shortcut fields -->
+          <div class="action-fields" id="fields-key">
+            <div class="field">
+              <div class="field-label">Key Code</div>
+              <input type="text" id="fKeyCode" placeholder="e.g. z, space, return, escape, f1…">
+            </div>
+            <div class="field">
+              <div class="field-label">Modifiers</div>
+              <div class="mod-chips" id="modChips">
+                <span class="mod-chip" data-mod="left_command" onclick="toggleMod(this)">⌘ Cmd</span>
+                <span class="mod-chip" data-mod="left_shift" onclick="toggleMod(this)">⇧ Shift</span>
+                <span class="mod-chip" data-mod="left_option" onclick="toggleMod(this)">⌥ Option</span>
+                <span class="mod-chip" data-mod="left_control" onclick="toggleMod(this)">⌃ Ctrl</span>
+                <span class="mod-chip" data-mod="right_command" onclick="toggleMod(this)">Cmd-R</span>
+                <span class="mod-chip" data-mod="right_shift" onclick="toggleMod(this)">Shift-R</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Media fields -->
+          <div class="action-fields" id="fields-media">
+            <div class="field">
+              <div class="field-label">Media Key</div>
+              <div class="media-grid" id="mediaGrid">
+                <div class="media-btn" data-code="play_or_pause" onclick="selectMedia(this)">Play/Pause</div>
+                <div class="media-btn" data-code="fast_forward" onclick="selectMedia(this)">Next Track</div>
+                <div class="media-btn" data-code="rewind" onclick="selectMedia(this)">Prev Track</div>
+                <div class="media-btn" data-code="volume_increment" onclick="selectMedia(this)">Vol +</div>
+                <div class="media-btn" data-code="volume_decrement" onclick="selectMedia(this)">Vol -</div>
+                <div class="media-btn" data-code="mute" onclick="selectMedia(this)">Mute</div>
+                <div class="media-btn" data-code="mission_control" onclick="selectMedia(this)">Mission Ctrl</div>
+                <div class="media-btn" data-code="launchpad" onclick="selectMedia(this)">Launchpad</div>
+                <div class="media-btn" data-code="display_brightness_increment" onclick="selectMedia(this)">Bright +</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- App fields -->
+          <div class="action-fields" id="fields-app">
+            <div class="field">
+              <div class="field-label">App Name</div>
+              <input type="text" id="fAppName" placeholder="e.g. Terminal, Safari, Finder…">
+              <div class="field-hint">Exact name as it appears in /Applications/</div>
+            </div>
+          </div>
+
+          <!-- Text fields -->
+          <div class="action-fields" id="fields-text">
+            <div class="field">
+              <div class="field-label">Text to Type</div>
+              <textarea id="fText" placeholder="Hello World&#10;my@email.com&#10;git commit -m &quot;&quot;"></textarea>
+            </div>
+          </div>
+
+        </div><!-- /config-body -->
+
+        <div class="config-footer">
+          <button class="btn btn-primary" onclick="saveKey()">Save Key</button>
+          <button class="btn btn-ghost" onclick="deselectKey()">Cancel</button>
+        </div>
+      </div><!-- /config-form -->
+
+    </div><!-- /config-panel -->
+
+  </main>
+
+  <!-- ─── FOOTER ─── -->
+  <footer>
+    <div class="footer-left">
+      <div class="footer-info" id="footerInfo">0 / 19 keys configured</div>
+    </div>
+    <div class="footer-right">
+      <button class="btn btn-ghost btn-sm" onclick="showJSON()">Preview JSON</button>
+      <button class="btn btn-primary btn-sm" onclick="exportJSON()">Export karabiner_profile.json</button>
+    </div>
+  </footer>
+
+</div>
+
+<!-- JSON Modal -->
+<div id="jsonModal" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:680px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;color:var(--amber)">karabiner_profile.json</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeJSON()">Close</button>
+    </div>
+    <pre id="jsonPreview" style="flex:1;overflow:auto;padding:16px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--text-secondary);white-space:pre"></pre>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────
+
+const DEVICE = { vendor_id: 12538, product_id: 9040 };
+
+const ACTION_COLORS = {
+  shell: 'var(--c-shell)',
+  key:   'var(--c-key)',
+  media: 'var(--c-media)',
+  app:   'var(--c-app)',
+  text:  'var(--c-text)',
+  none:  'var(--c-none)',
+};
+
+// All 19 keys confirmed from Karabiner-EventViewer + chat typing test.
+// The rotary encoder sends consumer_key_code volume_increment/decrement — handled separately.
+const DEFAULT_KEYS = [
+  { id:1,  label:'Key 1',       fromKeyType:'key_code', fromKey:'a',              action:null },
+  { id:2,  label:'Key 2',       fromKeyType:'key_code', fromKey:'b',              action:null },
+  { id:3,  label:'Key 3',       fromKeyType:'key_code', fromKey:'c',              action:null },
+  { id:4,  label:'Key 4',       fromKeyType:'key_code', fromKey:'d',              action:null },
+  { id:5,  label:'Key 5',       fromKeyType:'key_code', fromKey:'e',              action:null },
+  { id:6,  label:'Key 6',       fromKeyType:'key_code', fromKey:'f',              action:null },
+  { id:7,  label:'Key 7',       fromKeyType:'key_code', fromKey:'g',              action:null },
+  { id:8,  label:'Key 8',       fromKeyType:'key_code', fromKey:'h',              action:null },
+  { id:9,  label:'Key 9',       fromKeyType:'key_code', fromKey:'i',              action:null },
+  { id:10, label:'Key 10',      fromKeyType:'key_code', fromKey:'j',              action:null },
+  { id:11, label:'Key 11',      fromKeyType:'key_code', fromKey:'keypad_period',  action:null },
+  { id:12, label:'Key 12',      fromKeyType:'key_code', fromKey:'keypad_enter',   action:null },
+  { id:13, label:'Key 13',      fromKeyType:'key_code', fromKey:'keypad_hyphen',  action:null },
+  { id:14, label:'Key 14',      fromKeyType:'key_code', fromKey:'keypad_plus',    action:null },
+  { id:15, label:'Key 15',      fromKeyType:'key_code', fromKey:'spacebar',       action:null },
+  { id:16, label:'Key 16',      fromKeyType:'key_code', fromKey:'down_arrow',     action:null },
+  { id:17, label:'Key 17',      fromKeyType:'key_code', fromKey:'left_arrow',     action:null },
+  { id:18, label:'Key 18',      fromKeyType:'key_code', fromKey:'right_arrow',    action:null },
+  { id:19, label:'Key 19',      fromKeyType:'key_code', fromKey:'up_arrow',       action:null },
+];
+
+let keys = JSON.parse(localStorage.getItem('macropad-keys') || 'null') || DEFAULT_KEYS.map(k => ({...k}));
+let selectedId = null;
+let currentActionType = null;
+
+// ─────────────────────────────────────────────────────
+// RENDER KEYPAD
+// ─────────────────────────────────────────────────────
+
+function renderKeypad() {
+  const grid = document.getElementById('keypadGrid');
+  grid.innerHTML = '';
+
+  // Rows 1-4: 4 keys each; Row 5: 3 keys (17-19)
+  const rows = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16],[17,18,19]];
+
+  rows.forEach((row, ri) => {
+    if (ri < 4) {
+      row.forEach(id => grid.appendChild(makeKey(id)));
+    } else {
+      const lastRow = document.createElement('div');
+      lastRow.className = 'key-row-last';
+      row.forEach(id => lastRow.appendChild(makeKey(id)));
+      grid.appendChild(lastRow);
+    }
+  });
+
+  updateFooter();
+}
+
+function makeKey(id) {
+  const k = keys.find(x => x.id === id);
+  const el = document.createElement('div');
+  el.className = 'key' + (selectedId === id ? ' selected' : '');
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', `Key ${id}: ${k.label || 'Unconfigured'}`);
+  el.onclick = () => selectKey(id);
+  el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') selectKey(id); };
+
+  const numEl = document.createElement('div');
+  numEl.className = 'key-num';
+  numEl.textContent = String(id).padStart(2,'0');
+
+  const lblEl = document.createElement('div');
+  lblEl.className = 'key-label';
+  lblEl.textContent = k.label || '—';
+
+  const dot = document.createElement('div');
+  dot.className = 'key-type-dot';
+  const atype = k.action ? k.action.type : 'none';
+  dot.style.background = ACTION_COLORS[atype];
+
+  el.appendChild(numEl);
+  el.appendChild(lblEl);
+  el.appendChild(dot);
+  return el;
+}
+
+function updateFooter() {
+  const configured = keys.filter(k => k.action).length;
+  document.getElementById('footerInfo').textContent =
+    `${configured} / 19 keys configured`;
+}
+
+// ─────────────────────────────────────────────────────
+// SELECT / DESELECT KEY
+// ─────────────────────────────────────────────────────
+
+function selectKey(id) {
+  selectedId = id;
+  renderKeypad();
+
+  const k = keys.find(x => x.id === id);
+  document.getElementById('emptyState').style.display = 'none';
+  const form = document.getElementById('configForm');
+  form.classList.add('visible');
+
+  document.getElementById('cfgKeyId').textContent = `KEY ${String(id).padStart(2,'0')}`;
+  document.getElementById('cfgTitle').textContent = k.label || 'Untitled Key';
+  document.getElementById('fLabel').value = k.label || '';
+  document.getElementById('fFromKeyType').value = k.fromKeyType || 'consumer_key_code';
+  document.getElementById('fFromKey').value = k.fromKey || '';
+
+  // Reset all action type buttons
+  document.querySelectorAll('.action-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.action-fields').forEach(f => f.classList.remove('visible'));
+
+  if (k.action) {
+    setActionType(k.action.type, k.action);
+  } else {
+    currentActionType = null;
+  }
+}
+
+function deselectKey() {
+  selectedId = null;
+  renderKeypad();
+  document.getElementById('emptyState').style.display = '';
+  document.getElementById('configForm').classList.remove('visible');
+}
+
+// ─────────────────────────────────────────────────────
+// ACTION TYPE
+// ─────────────────────────────────────────────────────
+
+function setActionType(type, existing) {
+  currentActionType = type;
+
+  document.querySelectorAll('.action-type-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+  document.querySelectorAll('.action-fields').forEach(f => f.classList.remove('visible'));
+  const fieldsEl = document.getElementById(`fields-${type}`);
+  if (fieldsEl) fieldsEl.classList.add('visible');
+
+  // Populate fields
+  if (type === 'shell') {
+    document.getElementById('fShellCmd').value = existing?.command || '';
+  } else if (type === 'key') {
+    document.getElementById('fKeyCode').value = existing?.keyCode || '';
+    const mods = existing?.modifiers || [];
+    document.querySelectorAll('.mod-chip').forEach(chip => {
+      chip.classList.toggle('active', mods.includes(chip.dataset.mod));
+    });
+  } else if (type === 'media') {
+    document.querySelectorAll('.media-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.code === existing?.mediaCode);
+    });
+  } else if (type === 'app') {
+    document.getElementById('fAppName').value = existing?.appName || '';
+  } else if (type === 'text') {
+    document.getElementById('fText').value = existing?.text || '';
+  }
+}
+
+function toggleMod(chip) {
+  chip.classList.toggle('active');
+}
+
+function selectMedia(btn) {
+  document.querySelectorAll('.media-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ─────────────────────────────────────────────────────
+// SAVE / CLEAR KEY
+// ─────────────────────────────────────────────────────
+
+function onLabelInput() {
+  document.getElementById('cfgTitle').textContent =
+    document.getElementById('fLabel').value || 'Untitled Key';
+}
+
+function saveKey() {
+  if (!selectedId) return;
+  const k = keys.find(x => x.id === selectedId);
+  k.label       = document.getElementById('fLabel').value.trim() || `Key ${selectedId}`;
+  k.fromKeyType = document.getElementById('fFromKeyType').value;
+  k.fromKey     = document.getElementById('fFromKey').value.trim();
+
+  if (currentActionType === 'shell') {
+    k.action = { type: 'shell', command: document.getElementById('fShellCmd').value.trim() };
+  } else if (currentActionType === 'key') {
+    const mods = [...document.querySelectorAll('.mod-chip.active')].map(c => c.dataset.mod);
+    k.action = { type: 'key', keyCode: document.getElementById('fKeyCode').value.trim(), modifiers: mods };
+  } else if (currentActionType === 'media') {
+    const active = document.querySelector('.media-btn.active');
+    k.action = active ? { type: 'media', mediaCode: active.dataset.code } : null;
+  } else if (currentActionType === 'app') {
+    k.action = { type: 'app', appName: document.getElementById('fAppName').value.trim() };
+  } else if (currentActionType === 'text') {
+    k.action = { type: 'text', text: document.getElementById('fText').value };
+  }
+
+  localStorage.setItem('macropad-keys', JSON.stringify(keys));
+  renderKeypad();
+  showToast('Key saved');
+}
+
+function clearKey() {
+  if (!selectedId) return;
+  const k = keys.find(x => x.id === selectedId);
+  k.action = null;
+  k.label  = '';
+  localStorage.setItem('macropad-keys', JSON.stringify(keys));
+  deselectKey();
+  showToast('Key cleared');
+}
+
+// ─────────────────────────────────────────────────────
+// JSON GENERATION
+// ─────────────────────────────────────────────────────
+
+function buildActionTo(k) {
+  if (!k.action) return null;
+  const { type } = k.action;
+
+  if (type === 'shell') {
+    return [{ shell_command: k.action.command }];
+  } else if (type === 'key') {
+    const obj = { key_code: k.action.keyCode };
+    if (k.action.modifiers && k.action.modifiers.length)
+      obj.modifiers = k.action.modifiers;
+    return [obj];
+  } else if (type === 'media') {
+    // mission_control/launchpad are key_code; volume/media are consumer_key_code
+    const mediaKeyCodeKeys = new Set(['mission_control','launchpad','dashboard']);
+    const field = mediaKeyCodeKeys.has(k.action.mediaCode) ? 'key_code' : 'consumer_key_code';
+    return [{ [field]: k.action.mediaCode }];
+  } else if (type === 'app') {
+    return [{ shell_command: `open -a '${k.action.appName}'` }];
+  } else if (type === 'text') {
+    return k.action.text.split('').map(ch => ({ key_code: ch }));
+  }
+  return null;
+}
+
+function buildProfile() {
+  const manipulators = keys
+    .filter(k => k.action && k.fromKey && k.fromKey !== '?')
+    .map(k => {
+      const to = buildActionTo(k);
+      const fromType = k.fromKeyType || 'consumer_key_code';
+      return {
+        description: k.label || `Key ${k.id}`,
+        type: 'basic',
+        from: { [fromType]: k.fromKey },
+        to,
+        conditions: [{
+          type: 'device_if',
+          identifiers: [{ vendor_id: DEVICE.vendor_id, product_id: DEVICE.product_id }]
+        }]
+      };
+    });
+
+  return {
+    description: 'INSTANT 19-Key Macro Pad',
+    manipulators
+  };
+}
+
+function showJSON() {
+  const profile = buildProfile();
+  document.getElementById('jsonPreview').textContent =
+    JSON.stringify(profile, null, 2);
+  const modal = document.getElementById('jsonModal');
+  modal.style.display = 'flex';
+}
+
+function closeJSON() {
+  document.getElementById('jsonModal').style.display = 'none';
+}
+
+function exportJSON() {
+  const profile = buildProfile();
+  const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'karabiner_profile.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exported karabiner_profile.json');
+}
+
+function importJSON() {
+  document.getElementById('importFile').click();
+}
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const manips = data.manipulators || [];
+      manips.forEach((m, i) => {
+        const k = keys[i];
+        if (!k) return;
+        k.fromKey = m.from?.key_code || k.fromKey;
+        k.label   = m.description || k.label;
+        // Detect action type from 'to'
+        if (m.to && m.to[0]) {
+          const t = m.to[0];
+          if (t.shell_command) {
+            if (t.shell_command.startsWith("open -a '")) {
+              k.action = { type: 'app', appName: t.shell_command.slice(9, -1) };
+            } else {
+              k.action = { type: 'shell', command: t.shell_command };
+            }
+          } else if (t.key_code && t.key_code.startsWith('media_') || ['volume_up','volume_down','mute','mission_control','launchpad'].includes(t.key_code)) {
+            k.action = { type: 'media', mediaCode: t.key_code };
+          } else if (t.key_code) {
+            k.action = { type: 'key', keyCode: t.key_code, modifiers: t.modifiers || [] };
+          }
+        }
+      });
+      localStorage.setItem('macropad-keys', JSON.stringify(keys));
+      deselectKey();
+      renderKeypad();
+      showToast('Profile imported');
+    } catch (err) {
+      showToast('Invalid JSON file');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ─────────────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────────────
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// Close modal on backdrop click
+document.getElementById('jsonModal').addEventListener('click', function(e) {
+  if (e.target === this) closeJSON();
+});
+
+// Keyboard nav: Escape deselects
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('jsonModal').style.display !== 'none') {
+      closeJSON();
+    } else if (selectedId) {
+      deselectKey();
+    }
+  }
+});
+
+function resetToDefaults() {
+  if (!confirm('Reset all keys to defaults? This clears saved config.')) return;
+  localStorage.removeItem('macropad-keys');
+  keys = DEFAULT_KEYS.map(k => ({...k}));
+  deselectKey();
+  renderKeypad();
+  showToast('Reset to defaults');
+}
+
+// ─────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────
+renderKeypad();
+</script>
+</body>
+</html>

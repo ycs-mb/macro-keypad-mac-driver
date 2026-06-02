@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacroPad · Key Configurator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-base:       #07070E;
+    --bg-raised:     #0D0D1A;
+    --bg-elevated:   #13131F;
+    --bg-key:        #161625;
+    --bg-key-top:    #1C1C30;
+    --border:        #252538;
+    --border-subtle: #1A1A28;
+    --amber:         #FFB800;
+    --amber-dim:     rgba(255,184,0,0.12);
+    --amber-glow:    rgba(255,184,0,0.25);
+    --text-primary:  #EEEEFF;
+    --text-secondary:#7070A0;
+    --text-muted:    #404060;
+
+    --c-shell:   #FF6B35;
+    --c-key:     #818CF8;
+    --c-media:   #34D399;
+    --c-app:     #FBBF24;
+    --c-text:    #E879F9;
+    --c-none:    #334155;
+
+    --radius:    8px;
+    --radius-sm: 5px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+  }
+
+  /* ─── SCANLINE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* ─── GRID BACKGROUND ─── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,184,0,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,184,0,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: 52px 1fr 48px;
+    height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(7,7,14,0.95);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 2px;
+  }
+  .logo-icon span {
+    background: var(--amber);
+    border-radius: 2px;
+    opacity: 0.7;
+  }
+  .logo-icon span:nth-child(2) { opacity: 0.4; }
+  .logo-icon span:nth-child(5) { opacity: 1; }
+  .logo-icon span:nth-child(8) { opacity: 0.5; }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba(0,212,160,0.08);
+    border: 1px solid rgba(0,212,160,0.2);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #34D399;
+    letter-spacing: 0.05em;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #34D399;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  main {
+    display: grid;
+    grid-template-columns: 580px 1fr;
+    overflow: hidden;
+  }
+
+  /* ─── LEFT: KEYPAD PANEL ─── */
+  .keypad-panel {
+    border-right: 1px solid var(--border);
+    background: var(--bg-raised);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 18px;
+    overflow-y: auto;
+  }
+
+  .device-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .device-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+  }
+  .device-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .section-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  /* ─── THE KEYPAD GRID ─── */
+  .keypad-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .keypad-main-section {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .keypad-knob-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 60px;
+  }
+
+  .rotary-knob {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #2c2c3e 0%, #161625 80%, #0a0a14 100%);
+    border: 2px solid var(--border);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 2px 3px rgba(255,255,255,0.1);
+    position: relative;
+    cursor: not-allowed;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .knob-cap {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #3a3a52 0%, #1e1e2d 100%);
+    border: 1px solid rgba(0,0,0,0.4);
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.05);
+    position: relative;
+  }
+  .knob-line {
+    position: absolute;
+    top: 3px;
+    left: calc(50% - 1.5px);
+    width: 3px;
+    height: 10px;
+    background: var(--amber);
+    border-radius: 2px;
+    box-shadow: 0 0 4px var(--amber-glow);
+  }
+  .knob-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 8px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  .keypad-keys-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex: 1;
+  }
+
+  .key-row-6 {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 7px;
+  }
+
+  .key-row-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr 4fr;
+    gap: 7px;
+  }
+
+  .keypad-dpad-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 150px;
+    align-items: center;
+  }
+
+  .dpad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 130px;
+    height: 130px;
+    position: relative;
+  }
+
+  .dpad-empty {
+    width: 100%;
+    height: 100%;
+  }
+
+  .key.key-dpad, .key.key-dpad-center {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    font-size: 10px;
+    padding: 2px;
+  }
+
+  .key.key-dpad-center {
+    background: linear-gradient(165deg, #1C1C30 0%, #13131F 100%);
+    border-color: var(--blue);
+  }
+
+  .key.key-dpad-center::after {
+    content: '?';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid rgba(255,184,0,0.3);
+    font-size: 7px;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Red accent keycaps matching physical keys */
+  #key-1:not(.selected),
+  #key-12:not(.selected),
+  #key-13:not(.selected),
+  #key-16:not(.selected),
+  #key-17:not(.selected),
+  #key-18:not(.selected),
+  #key-19:not(.selected),
+  #key-20:not(.selected) {
+    background: linear-gradient(165deg, #3d141b 0%, #1f0b0d 100%);
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+
+  /* Cool Gray keycaps matching physical keys */
+  #key-5:not(.selected),
+  #key-6:not(.selected),
+  #key-9:not(.selected),
+  #key-10:not(.selected),
+  #key-11:not(.selected) {
+    background: linear-gradient(165deg, #444850 0%, #292b30 100%);
+    border-color: rgba(108, 112, 121, 0.4);
+  }
+
+  .key {
+    position: relative;
+    min-height: 52px;
+    background: linear-gradient(165deg, var(--bg-key-top) 0%, var(--bg-key) 100%);
+    border: 1px solid var(--border);
+    border-bottom: 3px solid #0A0A16;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 4px;
+    transition: all 130ms ease;
+    box-shadow:
+      0 3px 6px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    user-select: none;
+  }
+
+  .key:hover {
+    border-color: var(--amber);
+    box-shadow:
+      0 3px 6px rgba(0,0,0,0.5),
+      0 0 18px var(--amber-glow),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    transform: translateY(-1px);
+  }
+
+  .key:active {
+    transform: translateY(2px);
+    border-bottom-width: 1px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+
+  .key.selected {
+    background: linear-gradient(165deg, #21190A 0%, #16100A 100%);
+    border-color: var(--amber);
+    border-bottom-color: #0A0800;
+    box-shadow:
+      0 3px 6px rgba(0,0,0,0.5),
+      0 0 24px var(--amber-glow),
+      inset 0 1px 0 rgba(255,184,0,0.08);
+  }
+
+  .key-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+
+  .key-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.2;
+    word-break: break-all;
+    max-width: 100%;
+    padding: 0 2px;
+  }
+
+  .key.selected .key-label { color: var(--amber); }
+
+  .key-type-dot {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+
+  /* ─── KEY LEGEND ─── */
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ─── RIGHT: CONFIG PANEL ─── */
+  .config-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-base);
+  }
+
+  /* Empty state */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 40px;
+  }
+  .empty-icon {
+    display: grid;
+    grid-template-columns: repeat(4, 20px);
+    grid-template-rows: repeat(2, 20px);
+    gap: 3px;
+    opacity: 0.15;
+  }
+  .empty-icon span {
+    background: var(--amber);
+    border-radius: 3px;
+  }
+  .empty-state h3 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .empty-state p {
+    font-size: 13px;
+    color: var(--text-muted);
+    max-width: 240px;
+    line-height: 1.6;
+  }
+
+  /* Config form */
+  .config-form {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+  .config-form.visible { display: flex; }
+
+  .config-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .config-key-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .config-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.04em;
+    color: var(--text-primary);
+  }
+
+  .config-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Form groups */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .field-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .field-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-top: -3px;
+  }
+
+  input[type="text"], textarea, select {
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    appearance: none;
+  }
+  input[type="text"]:focus, textarea:focus, select:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px var(--amber-dim);
+  }
+  select option { background: var(--bg-elevated); }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+
+  /* Action type selector */
+  .action-types {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .action-type-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    transition: all 150ms ease;
+  }
+  .action-type-btn:hover { border-color: var(--border-subtle); color: var(--text-secondary); }
+  .action-type-btn.active {
+    border-color: currentColor;
+    background: rgba(255,255,255,0.04);
+  }
+  .action-type-btn .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .action-type-btn[data-type="shell"]   { color: var(--c-shell);  }
+  .action-type-btn[data-type="key"]     { color: var(--c-key);    }
+  .action-type-btn[data-type="media"]   { color: var(--c-media);  }
+  .action-type-btn[data-type="app"]     { color: var(--c-app);    }
+  .action-type-btn[data-type="text"]    { color: var(--c-text);   }
+  .action-type-btn:not(.active)         { color: var(--text-muted); }
+
+  /* Sub-fields per action type */
+  .action-fields { display: none; flex-direction: column; gap: 14px; }
+  .action-fields.visible { display: flex; }
+
+  /* Modifier chips */
+  .mod-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .mod-chip {
+    padding: 4px 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 130ms ease;
+    user-select: none;
+  }
+  .mod-chip.active {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  /* Media key grid */
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .media-btn {
+    padding: 8px 6px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-align: center;
+    transition: all 130ms ease;
+    user-select: none;
+  }
+  .media-btn.active {
+    background: rgba(52,211,153,0.1);
+    border-color: var(--c-media);
+    color: var(--c-media);
+  }
+  .media-btn:hover:not(.active) { border-color: var(--text-muted); }
+
+  /* Save area */
+  .config-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 150ms ease;
+  }
+  .btn-primary {
+    background: var(--amber);
+    color: #080808;
+  }
+  .btn-primary:hover { background: #FFCA40; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--amber); color: var(--amber); }
+  .btn-danger {
+    background: transparent;
+    color: #FF4444;
+    border: 1px solid rgba(255,68,68,0.25);
+  }
+  .btn-danger:hover { background: rgba(255,68,68,0.08); }
+  .btn-sm { padding: 5px 11px; font-size: 11px; }
+
+  /* ─── JSON OUTPUT (right side bottom or tab) ─── */
+  .json-panel {
+    border-left: 1px solid var(--border);
+    width: 360px;
+    background: var(--bg-raised);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 300ms ease;
+  }
+  .json-panel.collapsed { width: 0; overflow: hidden; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-top: 1px solid var(--border);
+    background: rgba(7,7,14,0.95);
+    backdrop-filter: blur(12px);
+    gap: 12px;
+  }
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .footer-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── JSON VIEWER ─── */
+  .json-viewer-wrap {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .json-viewer-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .json-viewer-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .json-code {
+    flex: 1;
+    overflow: auto;
+    padding: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    white-space: pre;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 64px;
+    left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    padding: 8px 18px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--amber);
+    border-radius: 100px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--amber);
+    opacity: 0;
+    transition: all 300ms ease;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  /* ─── 3D VIEWPORT & ENGINE ─── */
+  .view-header {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 8px;
+  }
+  .view-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(0,0,0,0.3);
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+  }
+  .view-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    color: var(--text-muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 150ms ease;
+  }
+  .view-tab:hover {
+    color: var(--text);
+    background: rgba(255,255,255,0.03);
+  }
+  .view-tab.active {
+    color: var(--amber);
+    background: rgba(255, 184, 0, 0.1);
+    box-shadow: 0 0 10px rgba(255, 184, 0, 0.05);
+    border: 1px solid rgba(255, 184, 0, 0.2);
+  }
+  .tab-icon {
+    opacity: 0.8;
+  }
+
+  .keypad-3d-viewport {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    position: relative;
+    background: radial-gradient(circle at center, #111122 0%, #06060e 100%);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+  .view-hint {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: rgba(0,0,0,0.6);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+    z-index: 10;
+    pointer-events: none;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .keypad-3d-stage {
+    width: 100%;
+    height: 100%;
+    perspective: 1000px;
+    perspective-origin: 50% 35%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .keypad-3d-board {
+    position: relative;
+    width: 380px;
+    height: 250px;
+    transform-style: preserve-3d;
+    transform: rotateX(55deg) rotateZ(-25deg);
+    transition: transform 0.05s linear;
+  }
+
+  /* 3D solid box basic styling */
+  .box-3d {
+    position: absolute;
+    transform-style: preserve-3d;
+  }
+  
+  /* Board Chassis faces */
+  .board-face {
+    position: absolute;
+    box-sizing: border-box;
+    background: #141519;
+    border: 1px solid #0f1013;
+    transform-style: preserve-3d; /* Keep 3D elements inside board faces! */
+  }
+  
+  /* Dimensions: 380 x 250 x 30 */
+  .board-face.face-top {
+    width: 380px;
+    height: 250px;
+    transform: translateZ(30px);
+    background: linear-gradient(135deg, #18191e 0%, #101114 100%);
+    border: 3px solid #3a3b40; /* Beveled metallic silver/gray bezel! */
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    position: relative;
+  }
+  .board-face.face-bottom {
+    width: 380px;
+    height: 250px;
+    transform: rotateX(180deg);
+    background: #090a0c;
+  }
+  .board-face.face-front {
+    width: 380px;
+    height: 30px;
+    transform: rotateX(-90deg) translateZ(250px);
+    transform-origin: bottom center;
+    background: #0f1013;
+    border-top: 1px solid #2e2f34;
+  }
+  .board-face.face-back {
+    width: 380px;
+    height: 30px;
+    transform: rotateX(90deg);
+    transform-origin: top center;
+    background: #0e0f12;
+    border-bottom: 1px solid #2e2f34;
+  }
+  .board-face.face-left {
+    width: 30px;
+    height: 250px;
+    transform: rotateY(-90deg);
+    transform-origin: center left;
+    background: #0d0e11;
+  }
+  .board-face.face-right {
+    width: 30px;
+    height: 250px;
+    transform: rotateY(90deg) translateZ(380px);
+    transform-origin: center right;
+    background: #0d0e11;
+  }
+
+  /* Stylized "CAM" silver brush logo on top right of chin (bottom-right of chassis) */
+  .cam-logo-3d {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: rgba(220, 220, 220, 0.45);
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.7), 0 0 8px rgba(255,255,255,0.1);
+    letter-spacing: 0.15em;
+    pointer-events: none;
+    user-select: none;
+    border-bottom: 2px solid rgba(220, 220, 220, 0.3);
+    padding-bottom: 2px;
+  }
+
+  /* 3D Keycap container */
+  .key-3d {
+    position: absolute;
+    transform-style: preserve-3d;
+    transform: translateZ(30px); /* sits on the board plate */
+    transition: transform 0.12s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.12s ease, filter 0.12s ease;
+    cursor: pointer;
+  }
+  
+  /* Micro-interactions: rise on hover with high-end brightness */
+  .key-3d:hover {
+    transform: translateZ(33px);
+    filter: brightness(1.08);
+  }
+
+  /* Dynamic compression animation when key active */
+  .key-3d.active, .key-3d:active {
+    transform: translateZ(24px) !important; /* Compressed down */
+    filter: brightness(0.92);
+  }
+
+  /* Selected key caps glow in index.html */
+  .key-3d.selected .face-top {
+    background: linear-gradient(135deg, #FFB800 0%, #CC9300 100%) !important;
+    color: #000000 !important;
+    box-shadow: 0 0 15px var(--amber-glow);
+  }
+  .key-3d.selected .face-front { background: #CC9300 !important; }
+  .key-3d.selected .face-left { background: #A67700 !important; }
+  .key-3d.selected .face-right { background: #E6A600 !important; }
+
+  /* Glow states for test.html (pass/fail/untested) */
+  .key-3d.pass .face-top {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+  }
+  .key-3d.pass .face-front { background: #059669 !important; }
+  .key-3d.pass .face-left { background: #047857 !important; }
+  .key-3d.pass .face-right { background: #34D399 !important; }
+
+  .key-3d.fail .face-top {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+  }
+  .key-3d.fail .face-front { background: #DC2626 !important; }
+  .key-3d.fail .face-left { background: #B91C1C !important; }
+  .key-3d.fail .face-right { background: #F87171 !important; }
+
+  /* 3D Key faces */
+  .key-face {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Outfit', sans-serif;
+    color: #ffffff;
+    user-select: none;
+    border: 1px solid rgba(0,0,0,0.3);
+  }
+
+  /* Default Red Keycaps with 3D light-source shading */
+  .key-3d.key-red .face-top { background: linear-gradient(135deg, #ef5350 0%, #c62828 100%); }
+  .key-3d.key-red .face-front { background: #9e0000; border-top: 1px solid rgba(255,255,255,0.1); }
+  .key-3d.key-red .face-back { background: #5f0000; }
+  .key-3d.key-red .face-left { background: #b71c1c; border-top: 1px solid rgba(255,255,255,0.15); }
+  .key-3d.key-red .face-right { background: #7f0000; }
+
+  /* Default Black Keycaps with 3D light-source shading */
+  .key-3d.key-black .face-top { background: linear-gradient(135deg, #3a3b42 0%, #1e1f22 100%); }
+  .key-3d.key-black .face-front { background: #17181a; border-top: 1px solid rgba(255,255,255,0.06); }
+  .key-3d.key-black .face-back { background: #0d0d0f; }
+  .key-3d.key-black .face-left { background: #26272b; border-top: 1px solid rgba(255,255,255,0.08); }
+  .key-3d.key-black .face-right { background: #101113; }
+
+  /* Default Gray Keycaps with 3D light-source shading */
+  .key-3d.key-gray .face-top { background: linear-gradient(135deg, #888d99 0%, #5c5f66 100%); }
+  .key-3d.key-gray .face-front { background: #393b3f; border-top: 1px solid rgba(255,255,255,0.1); }
+  .key-3d.key-gray .face-back { background: #202123; }
+  .key-3d.key-gray .face-left { background: #4f5157; border-top: 1px solid rgba(255,255,255,0.15); }
+  .key-3d.key-gray .face-right { background: #2b2d30; }
+
+  /* Key Face Geometry (3D cubes) - Watertight boundary system with zero gaps */
+  .key-face.face-top {
+    width: 100%;
+    height: 100%;
+    transform: translateZ(16px);
+    border-radius: 4px;
+    box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    padding: 4px 3px;
+    justify-content: space-between;
+    top: 0;
+    left: 0;
+  }
+  .key-face.face-front {
+    width: 100%;
+    height: 16px;
+    left: 0;
+    bottom: 0;
+    transform-origin: bottom center;
+    transform: rotateX(90deg);
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+  .key-face.face-back {
+    width: 100%;
+    height: 16px;
+    left: 0;
+    top: 0;
+    transform-origin: top center;
+    transform: rotateX(-90deg);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+  }
+  .key-face.face-left {
+    width: 16px;
+    height: 100%;
+    left: 0;
+    top: 0;
+    transform-origin: left center;
+    transform: rotateY(90deg);
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
+  .key-face.face-right {
+    width: 16px;
+    height: 100%;
+    right: 0;
+    top: 0;
+    transform-origin: right center;
+    transform: rotateY(-90deg);
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+
+  /* Circular D-pad keys */
+  .key-3d.key-circle .face-top {
+    border-radius: 50% !important;
+  }
+  /* For circles, let's represent them cleanly with rounded faces */
+  .key-3d.key-circle .key-face {
+    border-radius: 3px;
+  }
+
+  /* Internal Key text details */
+  .key3d-num {
+    font-size: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    color: rgba(255,255,255,0.4);
+    align-self: flex-start;
+  }
+  .key-3d.selected .key3d-num {
+    color: rgba(0,0,0,0.5);
+  }
+  .key3d-lbl {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    align-self: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    margin-bottom: 2px;
+  }
+
+  /* 3D KNOB CYLINDER ELEMENTS */
+  .rotary-knob-3d {
+    width: 36px;
+    height: 36px;
+    transform-style: preserve-3d;
+  }
+  .knob-side {
+    position: absolute;
+    background: linear-gradient(to right, #9e1b1b 0%, #b71c1c 40%, #d32f2f 60%, #7f1717 100%);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.4);
+    transform-origin: 50% 100%;
+    bottom: 50%;
+    left: 50%;
+  }
+  .knob-top {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, #e53935 0%, #b71c1c 80%, #7f1717 100%);
+    border: 2px solid #ff5252;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .knob-indicator {
+    width: 2px;
+    height: 12px;
+    background: #ffffff;
+    position: absolute;
+    top: 2px;
+    border-radius: 1px;
+    box-shadow: 0 0 4px rgba(255,255,255,0.8);
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── HEADER ─── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+      MacroPad
+    </div>
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      INSTANT · VID:30FA · PID:2350
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" onclick="resetToDefaults()">Reset</button>
+      <button class="btn btn-ghost btn-sm" onclick="importJSON()">Import JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+    </div>
+  </header>
+
+  <!-- ─── MAIN ─── -->
+  <main>
+
+    <!-- LEFT: Keypad -->
+    <div class="keypad-panel">
+      <div class="device-card">
+        <div class="device-name">INSTANT 19-Key Macro Pad</div>
+        <div class="device-meta">USB HID · Low Speed · Configured via Karabiner-Elements</div>
+      </div>
+
+      <div class="view-header">
+        <div class="view-tabs">
+          <button class="view-tab active" id="btn2D" onclick="setViewMode('2d')">
+            <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M3 3h18v18H3V3zm2 2v14h14V5H5z"/></svg>
+            2D Grid Layout
+          </button>
+          <button class="view-tab" id="btn3D" onclick="setViewMode('3d')">
+            <svg class="tab-icon" viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Interactive 3D
+          </button>
+        </div>
+      </div>
+
+      <div class="keypad-grid" id="keypadGrid">
+        <!-- keys injected by JS -->
+      </div>
+
+      <div class="keypad-3d-viewport" id="keypad3DViewport" style="display: none;">
+        <div class="view-hint">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          Drag left-click to orbit view
+        </div>
+        <div class="keypad-3d-stage">
+          <div class="keypad-3d-board" id="keypad3DBoard">
+            <!-- Chassis faces and keys generated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">Legend</div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-shell)"></span>Shell Command</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-key)"></span>Key Shortcut</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-media)"></span>Media Control</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-app)"></span>Open App</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-text)"></span>Type Text</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--c-none)"></span>Not Configured</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Config Panel -->
+    <div class="config-panel">
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <h3>Select a Key</h3>
+        <p>Click any key on the pad to configure its action, shortcut, or shell command.</p>
+      </div>
+
+      <!-- Config form -->
+      <div class="config-form" id="configForm">
+        <div class="config-header">
+          <div>
+            <div class="config-key-id" id="cfgKeyId">KEY 01</div>
+            <div class="config-title" id="cfgTitle">Untitled Key</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="clearKey()">Clear</button>
+        </div>
+
+        <div class="config-body">
+
+          <!-- Label -->
+          <div class="field">
+            <div class="field-label">Display Label</div>
+            <input type="text" id="fLabel" placeholder="e.g. Terminal, Play/Pause…" oninput="onLabelInput()">
+          </div>
+
+          <!-- From key code -->
+          <div class="field">
+            <div class="field-label">Hardware Key Code</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <select id="fFromKeyType" style="width:auto;flex-shrink:0;font-size:11px;padding:9px 8px">
+                <option value="key_code">key_code</option>
+                <option value="consumer_key_code">consumer_key_code</option>
+              </select>
+              <input type="text" id="fFromKey" placeholder="e.g. a, keypad_enter, down_arrow…" style="flex:1">
+            </div>
+            <div class="field-hint">Open Karabiner-EventViewer, press the key, copy the code shown under <code style="color:var(--amber);font-family:JetBrains Mono,monospace">name</code>. All 19 keys on this pad send <code style="color:var(--amber);font-family:JetBrains Mono,monospace">key_code</code> (the rotary encoder sends <code style="color:var(--amber);font-family:JetBrains Mono,monospace">consumer_key_code</code>).</div>
+          </div>
+
+          <!-- Action type -->
+          <div class="field">
+            <div class="field-label">Action Type</div>
+            <div class="action-types">
+              <button class="action-type-btn" data-type="shell" onclick="setActionType('shell')">
+                <span class="dot"></span>Shell
+              </button>
+              <button class="action-type-btn" data-type="key" onclick="setActionType('key')">
+                <span class="dot"></span>Shortcut
+              </button>
+              <button class="action-type-btn" data-type="media" onclick="setActionType('media')">
+                <span class="dot"></span>Media
+              </button>
+              <button class="action-type-btn" data-type="app" onclick="setActionType('app')">
+                <span class="dot"></span>App
+              </button>
+              <button class="action-type-btn" data-type="text" onclick="setActionType('text')">
+                <span class="dot"></span>Text
+              </button>
+            </div>
+          </div>
+
+          <!-- Shell fields -->
+          <div class="action-fields" id="fields-shell">
+            <div class="field">
+              <div class="field-label">Shell Command</div>
+              <textarea id="fShellCmd" placeholder="open -a 'Terminal'&#10;osascript -e 'set volume 50'&#10;screencapture -i ~/Desktop/shot.png"></textarea>
+            </div>
+          </div>
+
+          <!-- Key Shortcut fields -->
+          <div class="action-fields" id="fields-key">
+            <div class="field">
+              <div class="field-label">Key Code</div>
+              <input type="text" id="fKeyCode" placeholder="e.g. z, space, return, escape, f1…">
+            </div>
+            <div class="field">
+              <div class="field-label">Modifiers</div>
+              <div class="mod-chips" id="modChips">
+                <span class="mod-chip" data-mod="left_command" onclick="toggleMod(this)">⌘ Cmd</span>
+                <span class="mod-chip" data-mod="left_shift" onclick="toggleMod(this)">⇧ Shift</span>
+                <span class="mod-chip" data-mod="left_option" onclick="toggleMod(this)">⌥ Option</span>
+                <span class="mod-chip" data-mod="left_control" onclick="toggleMod(this)">⌃ Ctrl</span>
+                <span class="mod-chip" data-mod="right_command" onclick="toggleMod(this)">Cmd-R</span>
+                <span class="mod-chip" data-mod="right_shift" onclick="toggleMod(this)">Shift-R</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Media fields -->
+          <div class="action-fields" id="fields-media">
+            <div class="field">
+              <div class="field-label">Media Key</div>
+              <div class="media-grid" id="mediaGrid">
+                <div class="media-btn" data-code="play_or_pause" onclick="selectMedia(this)">Play/Pause</div>
+                <div class="media-btn" data-code="fast_forward" onclick="selectMedia(this)">Next Track</div>
+                <div class="media-btn" data-code="rewind" onclick="selectMedia(this)">Prev Track</div>
+                <div class="media-btn" data-code="volume_increment" onclick="selectMedia(this)">Vol +</div>
+                <div class="media-btn" data-code="volume_decrement" onclick="selectMedia(this)">Vol -</div>
+                <div class="media-btn" data-code="mute" onclick="selectMedia(this)">Mute</div>
+                <div class="media-btn" data-code="mission_control" onclick="selectMedia(this)">Mission Ctrl</div>
+                <div class="media-btn" data-code="launchpad" onclick="selectMedia(this)">Launchpad</div>
+                <div class="media-btn" data-code="display_brightness_increment" onclick="selectMedia(this)">Bright +</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- App fields -->
+          <div class="action-fields" id="fields-app">
+            <div class="field">
+              <div class="field-label">App Name</div>
+              <input type="text" id="fAppName" placeholder="e.g. Terminal, Safari, Finder…">
+              <div class="field-hint">Exact name as it appears in /Applications/</div>
+            </div>
+          </div>
+
+          <!-- Text fields -->
+          <div class="action-fields" id="fields-text">
+            <div class="field">
+              <div class="field-label">Text to Type</div>
+              <textarea id="fText" placeholder="Hello World&#10;my@email.com&#10;git commit -m &quot;&quot;"></textarea>
+            </div>
+          </div>
+
+        </div><!-- /config-body -->
+
+        <div class="config-footer">
+          <button class="btn btn-primary" onclick="saveKey()">Save Key</button>
+          <button class="btn btn-ghost" onclick="deselectKey()">Cancel</button>
+        </div>
+      </div><!-- /config-form -->
+
+    </div><!-- /config-panel -->
+
+  </main>
+
+  <!-- ─── FOOTER ─── -->
+  <footer>
+    <div class="footer-left">
+      <div class="footer-info" id="footerInfo">0 / 19 keys configured</div>
+    </div>
+    <div class="footer-right">
+      <button class="btn btn-ghost btn-sm" onclick="showJSON()">Preview JSON</button>
+      <button class="btn btn-primary btn-sm" onclick="exportJSON()">Export karabiner_profile.json</button>
+      <button class="btn btn-accent btn-sm" id="btnApplyDirect" onclick="applyDirect()" style="display: none; background: var(--green); color: #080808; font-weight: 700; border: none; box-shadow: 0 0 12px var(--green-glow);">⚡ Apply to Karabiner</button>
+    </div>
+  </footer>
+
+</div>
+
+<!-- JSON Modal -->
+<div id="jsonModal" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:680px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;color:var(--amber)">karabiner_profile.json</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeJSON()">Close</button>
+    </div>
+    <pre id="jsonPreview" style="flex:1;overflow:auto;padding:16px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--text-secondary);white-space:pre"></pre>
+  </div>
+</div>
+
+<!-- Install Modal -->
+<div id="installModal" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:560px;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:0.08em;text-transform:uppercase;color:var(--amber)">Install on macOS</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeInstall()">Close</button>
+    </div>
+    <div style="padding:18px;display:flex;flex-direction:column;gap:14px">
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.6">
+        <strong style="color:var(--text-primary)">karabiner_profile.json</strong> was saved to your Downloads. Open
+        <strong style="color:var(--text-primary)">Terminal</strong> and run this one line — it moves the file into the
+        project and applies it to Karabiner-Elements:
+      </p>
+      <pre id="installCmd" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.6;color:var(--amber);white-space:pre-wrap;word-break:break-all">mv ~/Downloads/karabiner_profile.json ~/Developer/macro-keypad/ &amp;&amp; bash ~/Developer/macro-keypad/install_profile.sh</pre>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" onclick="copyInstallCmd()">Copy command</button>
+        <button class="btn btn-ghost" onclick="closeInstall()">Done</button>
+      </div>
+      <p style="font-size:11px;color:var(--text-muted);line-height:1.5">
+        The installer backs up your current Karabiner config first, then activates the "INSTANT 19-Key Macro Pad"
+        profile. Safe to run repeatedly.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────
+
+const DEVICE = { vendor_id: 12538, product_id: 9040 };
+
+const ACTION_COLORS = {
+  shell: 'var(--c-shell)',
+  key:   'var(--c-key)',
+  media: 'var(--c-media)',
+  app:   'var(--c-app)',
+  text:  'var(--c-text)',
+  none:  'var(--c-none)',
+};
+
+// All 19 keys confirmed from Karabiner-EventViewer + chat typing test.
+// The rotary encoder sends consumer_key_code volume_increment/decrement — handled separately.
+// Pre-populated to mirror the installed Karabiner profile (karabiner_profile.json
+// is the source of truth). All 19 keys send key_code; the rotary encoder is separate.
+const DEFAULT_KEYS = [
+  { id:1,  label:'esc',             fromKeyType:'key_code', fromKey:'keypad_1',      action:{ type:'key',   keyCode:'escape',   modifiers:[] } },
+  { id:2,  label:'VS Code',         fromKeyType:'key_code', fromKey:'keypad_2',      action:{ type:'app',   appName:'Visual Studio Code' } },
+  { id:3,  label:'Edge',            fromKeyType:'key_code', fromKey:'keypad_3',      action:{ type:'app',   appName:'Microsoft Edge' } },
+  { id:4,  label:'Mission Control', fromKeyType:'key_code', fromKey:'keypad_4',      action:{ type:'media', mediaCode:'mission_control' } },
+  { id:5,  label:'Prev-Track',      fromKeyType:'key_code', fromKey:'keypad_5',      action:{ type:'media', mediaCode:'rewind' } },
+  { id:6,  label:'Next-Track',      fromKeyType:'key_code', fromKey:'keypad_6',      action:{ type:'media', mediaCode:'fast_forward' } },
+  { id:7,  label:'Undo',            fromKeyType:'key_code', fromKey:'keypad_7',      action:{ type:'key',   keyCode:'z',        modifiers:['left_command'] } },
+  { id:8,  label:'Redo',            fromKeyType:'key_code', fromKey:'keypad_8',      action:{ type:'key',   keyCode:'z',        modifiers:['left_command','left_shift'] } },
+  { id:9,  label:'Copy',            fromKeyType:'key_code', fromKey:'keypad_9',      action:{ type:'key',   keyCode:'c',        modifiers:['left_command'] } },
+  { id:10, label:'Paste',           fromKeyType:'key_code', fromKey:'keypad_0',      action:{ type:'key',   keyCode:'v',        modifiers:['left_command'] } },
+  { id:11, label:'Cut',             fromKeyType:'key_code', fromKey:'keypad_period', action:{ type:'key',   keyCode:'x',        modifiers:['left_command'] } },
+  { id:12, label:'Screenshot',      fromKeyType:'key_code', fromKey:'keypad_enter',  action:{ type:'shell', command:'screencapture -i ~/Desktop/screenshot-$(date +%Y%m%d-%H%M%S).png' } },
+  { id:13, label:'Play/Pause',      fromKeyType:'key_code', fromKey:'keypad_hyphen', action:{ type:'media', mediaCode:'play_or_pause' } },
+  { id:14, label:'switch-app',      fromKeyType:'key_code', fromKey:'keypad_plus',   action:{ type:'key',   keyCode:'period',   modifiers:['left_command','left_shift'] } },
+  { id:15, label:'Spotlight',       fromKeyType:'key_code', fromKey:'spacebar',      action:{ type:'key',   keyCode:'spacebar', modifiers:['left_command'] } },
+  { id:16, label:'down',            fromKeyType:'key_code', fromKey:'down_arrow',    action:{ type:'key',   keyCode:'down_arrow',modifiers:[] } },
+  { id:17, label:'left',            fromKeyType:'key_code', fromKey:'left_arrow',    action:{ type:'key',   keyCode:'left_arrow',modifiers:[] } },
+  { id:18, label:'right',           fromKeyType:'key_code', fromKey:'right_arrow',   action:{ type:'key',   keyCode:'right_arrow',modifiers:[] } },
+  { id:19, label:'up',              fromKeyType:'key_code', fromKey:'up_arrow',      action:{ type:'key',   keyCode:'up_arrow',  modifiers:[] } },
+  { id:20, label:'D-Pad Center',    fromKeyType:'key_code', fromKey:'return_or_enter',action:{ type:'key',   keyCode:'tab',       modifiers:['left_command'] } },
+];
+
+// Bump when DEFAULT_KEYS schema/content changes so a stale localStorage copy
+// (e.g. from earlier testing) doesn't mask the new defaults on first load.
+const SCHEMA_VERSION = '5';
+if (localStorage.getItem('macropad-schema') !== SCHEMA_VERSION) {
+  localStorage.removeItem('macropad-keys');
+  localStorage.setItem('macropad-schema', SCHEMA_VERSION);
+}
+
+let keys = JSON.parse(localStorage.getItem('macropad-keys') || 'null') || DEFAULT_KEYS.map(k => ({...k}));
+let selectedId = null;
+let currentActionType = null;
+
+// ─────────────────────────────────────────────────────
+// RENDER KEYPAD
+// ─────────────────────────────────────────────────────
+
+function renderKeypad() {
+  const grid = document.getElementById('keypadGrid');
+  grid.innerHTML = '';
+
+  // Create Left/Main Keys Area
+  const mainSection = document.createElement('div');
+  mainSection.className = 'keypad-main-section';
+
+  // Create Knob Column
+  const knobCol = document.createElement('div');
+  knobCol.className = 'keypad-knob-col';
+  const knob = document.createElement('div');
+  knob.className = 'rotary-knob';
+  knob.title = 'Rotary Encoder (Volume Control)';
+  knob.innerHTML = `
+    <div class="knob-cap">
+      <div class="knob-line"></div>
+    </div>
+    <div class="knob-label">VOL</div>
+  `;
+  knobCol.appendChild(knob);
+  mainSection.appendChild(knobCol);
+
+  // Create Keys Grid (6 columns)
+  const keysGrid = document.createElement('div');
+  keysGrid.className = 'keypad-keys-grid';
+
+  // Row 1: Keys 1-6
+  const row1 = document.createElement('div');
+  row1.className = 'key-row-6';
+  [1,2,3,4,5,6].forEach(id => row1.appendChild(makeKey(id)));
+  keysGrid.appendChild(row1);
+
+  // Row 2: Keys 7-12
+  const row2 = document.createElement('div');
+  row2.className = 'key-row-6';
+  [7,8,9,10,11,12].forEach(id => row2.appendChild(makeKey(id)));
+  keysGrid.appendChild(row2);
+
+  // Row 3: Keys 13, 14, 15
+  const row3 = document.createElement('div');
+  row3.className = 'key-row-bottom';
+  [13, 14, 15].forEach(id => row3.appendChild(makeKey(id)));
+  keysGrid.appendChild(row3);
+
+  mainSection.appendChild(keysGrid);
+  grid.appendChild(mainSection);
+
+  // Create D-pad Section
+  const dpadSection = document.createElement('div');
+  dpadSection.className = 'keypad-dpad-section';
+  
+  const dpadTitle = document.createElement('div');
+  dpadTitle.className = 'section-label';
+  dpadTitle.textContent = 'D-Pad';
+  dpadSection.appendChild(dpadTitle);
+
+  const dpadGrid = document.createElement('div');
+  dpadGrid.className = 'dpad-grid';
+
+  // Up, Left, Center, Right, Down
+  const dpadLayout = [
+    null, 19, null,
+    17, 20, 18,
+    null, 16, null
+  ];
+
+  dpadLayout.forEach(id => {
+    if (id === null) {
+      const empty = document.createElement('div');
+      empty.className = 'dpad-empty';
+      dpadGrid.appendChild(empty);
+    } else {
+      const keyEl = makeKey(id);
+      if (id === 20) {
+        keyEl.classList.add('key-dpad-center');
+      } else {
+        keyEl.classList.add('key-dpad');
+      }
+      dpadGrid.appendChild(keyEl);
+    }
+  });
+
+  dpadSection.appendChild(dpadGrid);
+  grid.appendChild(dpadSection);
+
+  updateFooter();
+  if (viewMode === '3d') {
+    update3DLabels();
+    update3DSelection();
+  }
+}
+
+function makeKey(id) {
+  const k = keys.find(x => x.id === id);
+  const el = document.createElement('div');
+  el.className = 'key' + (selectedId === id ? ' selected' : '');
+  el.id = `key-${id}`;
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('aria-label', `Key ${id}: ${k.label || 'Unconfigured'}`);
+  el.onclick = () => selectKey(id);
+  el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') selectKey(id); };
+
+  const numEl = document.createElement('div');
+  numEl.className = 'key-num';
+  numEl.textContent = String(id).padStart(2,'0');
+
+  const lblEl = document.createElement('div');
+  lblEl.className = 'key-label';
+  lblEl.textContent = k.label || '—';
+
+  const dot = document.createElement('div');
+  dot.className = 'key-type-dot';
+  const atype = k.action ? k.action.type : 'none';
+  dot.style.background = ACTION_COLORS[atype];
+
+  el.appendChild(numEl);
+  el.appendChild(lblEl);
+  el.appendChild(dot);
+  return el;
+}
+
+function updateFooter() {
+  const configured = keys.filter(k => k.action).length;
+  document.getElementById('footerInfo').textContent =
+    `${configured} / 20 keys configured`;
+}
+
+// ─────────────────────────────────────────────────────
+// SELECT / DESELECT KEY
+// ─────────────────────────────────────────────────────
+
+function selectKey(id) {
+  selectedId = id;
+  renderKeypad();
+
+  const k = keys.find(x => x.id === id);
+  document.getElementById('emptyState').style.display = 'none';
+  const form = document.getElementById('configForm');
+  form.classList.add('visible');
+
+  document.getElementById('cfgKeyId').textContent = `KEY ${String(id).padStart(2,'0')}`;
+  document.getElementById('cfgTitle').textContent = k.label || 'Untitled Key';
+  document.getElementById('fLabel').value = k.label || '';
+  document.getElementById('fFromKeyType').value = k.fromKeyType || 'key_code';
+  document.getElementById('fFromKey').value = k.fromKey || '';
+
+  // Reset all action type buttons
+  document.querySelectorAll('.action-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.action-fields').forEach(f => f.classList.remove('visible'));
+
+  if (k.action) {
+    setActionType(k.action.type, k.action);
+  } else {
+    currentActionType = null;
+  }
+}
+
+function deselectKey() {
+  selectedId = null;
+  renderKeypad();
+  document.getElementById('emptyState').style.display = '';
+  document.getElementById('configForm').classList.remove('visible');
+}
+
+// ─────────────────────────────────────────────────────
+// ACTION TYPE
+// ─────────────────────────────────────────────────────
+
+function setActionType(type, existing) {
+  currentActionType = type;
+
+  document.querySelectorAll('.action-type-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+  document.querySelectorAll('.action-fields').forEach(f => f.classList.remove('visible'));
+  const fieldsEl = document.getElementById(`fields-${type}`);
+  if (fieldsEl) fieldsEl.classList.add('visible');
+
+  // Populate fields
+  if (type === 'shell') {
+    document.getElementById('fShellCmd').value = existing?.command || '';
+  } else if (type === 'key') {
+    document.getElementById('fKeyCode').value = existing?.keyCode || '';
+    const mods = existing?.modifiers || [];
+    document.querySelectorAll('.mod-chip').forEach(chip => {
+      chip.classList.toggle('active', mods.includes(chip.dataset.mod));
+    });
+  } else if (type === 'media') {
+    document.querySelectorAll('.media-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.code === existing?.mediaCode);
+    });
+  } else if (type === 'app') {
+    document.getElementById('fAppName').value = existing?.appName || '';
+  } else if (type === 'text') {
+    document.getElementById('fText').value = existing?.text || '';
+  }
+}
+
+function toggleMod(chip) {
+  chip.classList.toggle('active');
+}
+
+function selectMedia(btn) {
+  document.querySelectorAll('.media-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ─────────────────────────────────────────────────────
+// SAVE / CLEAR KEY
+// ─────────────────────────────────────────────────────
+
+function onLabelInput() {
+  document.getElementById('cfgTitle').textContent =
+    document.getElementById('fLabel').value || 'Untitled Key';
+}
+
+function saveKey() {
+  if (!selectedId) return;
+  const k = keys.find(x => x.id === selectedId);
+  k.label       = document.getElementById('fLabel').value.trim() || `Key ${selectedId}`;
+  k.fromKeyType = document.getElementById('fFromKeyType').value;
+  k.fromKey     = document.getElementById('fFromKey').value.trim();
+
+  if (currentActionType === 'shell') {
+    k.action = { type: 'shell', command: document.getElementById('fShellCmd').value.trim() };
+  } else if (currentActionType === 'key') {
+    const mods = [...document.querySelectorAll('.mod-chip.active')].map(c => c.dataset.mod);
+    k.action = { type: 'key', keyCode: document.getElementById('fKeyCode').value.trim(), modifiers: mods };
+  } else if (currentActionType === 'media') {
+    const active = document.querySelector('.media-btn.active');
+    k.action = active ? { type: 'media', mediaCode: active.dataset.code } : null;
+  } else if (currentActionType === 'app') {
+    k.action = { type: 'app', appName: document.getElementById('fAppName').value.trim() };
+  } else if (currentActionType === 'text') {
+    k.action = { type: 'text', text: document.getElementById('fText').value };
+  }
+
+  localStorage.setItem('macropad-keys', JSON.stringify(keys));
+  renderKeypad();
+  showToast('Key saved');
+}
+
+function clearKey() {
+  if (!selectedId) return;
+  const k = keys.find(x => x.id === selectedId);
+  k.action = null;
+  k.label  = '';
+  localStorage.setItem('macropad-keys', JSON.stringify(keys));
+  deselectKey();
+  showToast('Key cleared');
+}
+
+// ─────────────────────────────────────────────────────
+// JSON GENERATION
+// ─────────────────────────────────────────────────────
+
+function buildActionTo(k) {
+  if (!k.action) return null;
+  const { type } = k.action;
+
+  if (type === 'shell') {
+    return [{ shell_command: k.action.command }];
+  } else if (type === 'key') {
+    const obj = { key_code: k.action.keyCode };
+    if (k.action.modifiers && k.action.modifiers.length)
+      obj.modifiers = k.action.modifiers;
+    return [obj];
+  } else if (type === 'media') {
+    // mission_control/launchpad are key_code; volume/media are consumer_key_code
+    const mediaKeyCodeKeys = new Set(['mission_control','launchpad','dashboard']);
+    const field = mediaKeyCodeKeys.has(k.action.mediaCode) ? 'key_code' : 'consumer_key_code';
+    return [{ [field]: k.action.mediaCode }];
+  } else if (type === 'app') {
+    return [{ shell_command: `open -a '${k.action.appName}'` }];
+  } else if (type === 'text') {
+    return k.action.text.split('').map(ch => ({ key_code: ch }));
+  }
+  return null;
+}
+
+function buildProfile() {
+  const manipulators = keys
+    .filter(k => k.action && k.fromKey && k.fromKey !== '?')
+    .map(k => {
+      const to = buildActionTo(k);
+      const fromType = k.fromKeyType || 'key_code';
+      return {
+        description: k.label || `Key ${k.id}`,
+        type: 'basic',
+        from: { [fromType]: k.fromKey },
+        to,
+        conditions: [{
+          type: 'device_if',
+          identifiers: [{ vendor_id: DEVICE.vendor_id, product_id: DEVICE.product_id }]
+        }]
+      };
+    });
+
+  return {
+    description: 'INSTANT 19-Key Macro Pad',
+    manipulators
+  };
+}
+
+function showJSON() {
+  const profile = buildProfile();
+  document.getElementById('jsonPreview').textContent =
+    JSON.stringify(profile, null, 2);
+  const modal = document.getElementById('jsonModal');
+  modal.style.display = 'flex';
+}
+
+function closeJSON() {
+  document.getElementById('jsonModal').style.display = 'none';
+}
+
+async function exportJSON() {
+  const profile = buildProfile();
+  const jsonStr = JSON.stringify(profile, null, 2);
+
+  // Try modern File System Access API first if supported
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: 'karabiner_profile.json',
+        types: [{
+          description: 'JSON Configuration',
+          accept: { 'application/json': ['.json'] },
+        }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(jsonStr);
+      await writable.close();
+      showToast('Saved successfully to ' + handle.name);
+      showInstall();
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        showToast('Save cancelled');
+        return;
+      }
+      console.warn('File System Access API failed, falling back to download', err);
+    }
+  }
+
+  // Fallback to classic download
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'karabiner_profile.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exported karabiner_profile.json');
+  showInstall();
+}
+
+function showInstall() {
+  document.getElementById('installModal').style.display = 'flex';
+}
+
+function closeInstall() {
+  document.getElementById('installModal').style.display = 'none';
+}
+
+function copyInstallCmd() {
+  const cmd = document.getElementById('installCmd').textContent;
+  navigator.clipboard.writeText(cmd).then(
+    () => showToast('Command copied'),
+    () => showToast('Copy failed — select manually')
+  );
+}
+
+function importJSON() {
+  document.getElementById('importFile').click();
+}
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const manips = data.manipulators || [];
+      manips.forEach((m, i) => {
+        const k = keys[i];
+        if (!k) return;
+        // From-key — preserve which code namespace it lives in.
+        if (m.from?.key_code) {
+          k.fromKey = m.from.key_code; k.fromKeyType = 'key_code';
+        } else if (m.from?.consumer_key_code) {
+          k.fromKey = m.from.consumer_key_code; k.fromKeyType = 'consumer_key_code';
+        }
+        k.label = m.description || k.label;
+        // Detect action type from 'to' (inverse of buildActionTo).
+        if (m.to && m.to[0]) {
+          const t = m.to[0];
+          const keyCodeMedia = new Set(['mission_control','launchpad','dashboard']);
+          if (t.consumer_key_code) {
+            k.action = { type: 'media', mediaCode: t.consumer_key_code };
+          } else if (t.shell_command) {
+            const appMatch = t.shell_command.match(/^open -a '(.+)'$/);
+            k.action = appMatch
+              ? { type: 'app', appName: appMatch[1] }
+              : { type: 'shell', command: t.shell_command };
+          } else if (t.key_code && keyCodeMedia.has(t.key_code)) {
+            k.action = { type: 'media', mediaCode: t.key_code };
+          } else if (t.key_code) {
+            k.action = { type: 'key', keyCode: t.key_code, modifiers: t.modifiers || [] };
+          }
+        }
+      });
+      localStorage.setItem('macropad-keys', JSON.stringify(keys));
+      deselectKey();
+      renderKeypad();
+      showToast('Profile imported');
+    } catch (err) {
+      showToast('Invalid JSON file');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ─────────────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────────────
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// Close modals on backdrop click
+document.getElementById('jsonModal').addEventListener('click', function(e) {
+  if (e.target === this) closeJSON();
+});
+document.getElementById('installModal').addEventListener('click', function(e) {
+  if (e.target === this) closeInstall();
+});
+
+// Keyboard nav: Escape closes the topmost modal, else deselects
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('installModal').style.display !== 'none') {
+      closeInstall();
+    } else if (document.getElementById('jsonModal').style.display !== 'none') {
+      closeJSON();
+    } else if (selectedId) {
+      deselectKey();
+    }
+  }
+});
+
+function resetToDefaults() {
+  if (!confirm('Reset all keys to defaults? This clears saved config.')) return;
+  localStorage.removeItem('macropad-keys');
+  keys = DEFAULT_KEYS.map(k => ({...k}));
+  deselectKey();
+  renderKeypad();
+  showToast('Reset to defaults');
+}
+
+// ─────────────────────────────────────────────────────
+// DIRECT SERVER INTEGRATION
+// ─────────────────────────────────────────────────────
+async function applyDirect() {
+  showToast('Applying configuration...');
+  try {
+    const response = await fetch('/api/apply', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(keys)
+    });
+    const result = await response.json();
+    if (response.ok && result.status === 'success') {
+      showToast('⚡ Applied to Karabiner successfully!', 3000);
+    } else {
+      showToast('❌ Error: ' + (result.message || 'Unknown error'), 4000);
+    }
+  } catch (err) {
+    showToast('❌ Server unreachable. Make sure python3 server.py is running!', 4000);
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// 3D KEYPAD ENGINE
+// ─────────────────────────────────────────────────────
+
+const KEY_3D_COORDS = {
+  1: { x: 74, y: 18, w: 34, h: 34, shape: 'square', colorClass: 'key-red' },
+  2: { x: 116, y: 18, w: 34, h: 34, shape: 'square', colorClass: 'key-black' },
+  3: { x: 158, y: 18, w: 34, h: 34, shape: 'square', colorClass: 'key-black' },
+  4: { x: 200, y: 18, w: 34, h: 34, shape: 'square', colorClass: 'key-black' },
+  5: { x: 242, y: 18, w: 34, h: 34, shape: 'square', colorClass: 'key-gray' },
+  6: { x: 284, y: 18, w: 34, h: 34, shape: 'square', colorClass: 'key-gray' },
+  
+  7: { x: 74, y: 62, w: 34, h: 34, shape: 'square', colorClass: 'key-black' },
+  8: { x: 116, y: 62, w: 34, h: 34, shape: 'square', colorClass: 'key-black' },
+  9: { x: 158, y: 62, w: 34, h: 34, shape: 'square', colorClass: 'key-gray' },
+  10: { x: 200, y: 62, w: 34, h: 34, shape: 'square', colorClass: 'key-gray' },
+  11: { x: 242, y: 62, w: 34, h: 34, shape: 'square', colorClass: 'key-gray' },
+  12: { x: 284, y: 62, w: 76, h: 34, shape: 'square', colorClass: 'key-red' }, // Wide Enter
+  
+  13: { x: 18, y: 106, w: 34, h: 34, shape: 'square', colorClass: 'key-red' },
+  14: { x: 60, y: 106, w: 34, h: 34, shape: 'square', colorClass: 'key-black' },
+  15: { x: 102, y: 106, w: 102, h: 34, shape: 'square', colorClass: 'key-black' }, // Wide Space
+  
+  16: { x: 274, y: 182, w: 32, h: 32, shape: 'circle', colorClass: 'key-red' },
+  17: { x: 236, y: 144, w: 32, h: 32, shape: 'circle', colorClass: 'key-red' },
+  18: { x: 312, y: 144, w: 32, h: 32, shape: 'circle', colorClass: 'key-red' },
+  19: { x: 274, y: 106, w: 32, h: 32, shape: 'circle', colorClass: 'key-red' },
+  20: { x: 274, y: 144, w: 32, h: 32, shape: 'circle', colorClass: 'key-red' }
+};
+
+let viewMode = '2d';
+let is3DInitialized = false;
+
+function setViewMode(mode) {
+  viewMode = mode;
+  const grid = document.getElementById('keypadGrid');
+  const viewport = document.getElementById('keypad3DViewport');
+  const btn2D = document.getElementById('btn2D');
+  const btn3D = document.getElementById('btn3D');
+  
+  if (mode === '3d') {
+    grid.style.display = 'none';
+    viewport.style.display = 'flex';
+    btn2D.classList.remove('active');
+    btn3D.classList.add('active');
+    if (!is3DInitialized) {
+      render3DKeypad();
+      init3DDrag();
+      is3DInitialized = true;
+    } else {
+      update3DSelection();
+      update3DLabels();
+    }
+  } else {
+    grid.style.display = 'flex';
+    viewport.style.display = 'none';
+    btn2D.classList.add('active');
+    btn3D.classList.remove('active');
+  }
+}
+
+function render3DKeypad() {
+  const board = document.getElementById('keypad3DBoard');
+  board.innerHTML = '';
+  
+  // Create 6 chassis faces
+  // Dimensions: 380px x 250px x 30px
+  const faces = [
+    { type: 'top', class: 'board-face face-top' },
+    { type: 'bottom', class: 'board-face face-bottom' },
+    { type: 'front', class: 'board-face face-front' },
+    { type: 'back', class: 'board-face face-back' },
+    { type: 'left', class: 'board-face face-left' },
+    { type: 'right', class: 'board-face face-right' }
+  ];
+  
+  faces.forEach(f => {
+    const el = document.createElement('div');
+    el.className = f.class;
+    
+    if (f.type === 'top') {
+      // Draw silver bezel, brush strokes, logo
+      const logo = document.createElement('div');
+      logo.className = 'cam-logo-3d';
+      logo.textContent = 'CAM';
+      el.appendChild(logo);
+      
+      // Inject rotary knob (VOL) cylinder inside top face
+      create3DRotaryKnob(el);
+      
+      // Inject keys
+      Object.keys(KEY_3D_COORDS).forEach(id => {
+        el.appendChild(makeKey3D(parseInt(id)));
+      });
+    }
+    board.appendChild(el);
+  });
+}
+
+function create3DRotaryKnob(parentEl) {
+  const knob = document.createElement('div');
+  knob.className = 'rotary-knob-3d box-3d';
+  knob.style.left = '16px';
+  knob.style.top = '16px';
+  knob.style.width = '36px';
+  knob.style.height = '36px';
+  knob.style.transform = 'translateZ(30px)'; // rests on the plate
+
+  // Cylinder sides
+  const sides = 16;
+  const radius = 18; // 36px diameter / 2
+  const height = 20;
+  const centerX = 18; // half of 36px
+  const centerY = 18;
+  const sideWidth = (2 * Math.PI * radius) / sides + 0.5;
+
+  for (let i = 0; i < sides; i++) {
+    const angleRad = (2 * Math.PI / sides) * i;
+    const angleDeg = (360 / sides) * i;
+    
+    // Calculate precise boundary coordinates for bottom-center of the side panel
+    const bx = centerX + radius * Math.cos(angleRad);
+    const by = centerY + radius * Math.sin(angleRad);
+    
+    // Top-left offset of side face to align bottom-center at (bx, by)
+    const tx = bx - sideWidth / 2;
+    const ty = by - height;
+    
+    const side = document.createElement('div');
+    side.className = 'knob-side';
+    side.style.width = `${sideWidth}px`;
+    side.style.height = `${height}px`;
+    
+    // Reset CSS positioning to allow absolute translate3d coordinates
+    side.style.left = '0px';
+    side.style.top = '0px';
+    side.style.bottom = 'auto';
+    side.style.marginLeft = '0px';
+    
+    // Place side panel with watertight coordinates and radial tangent orientation
+    side.style.transform = `translate3d(${tx}px, ${ty}px, 0px) rotateZ(${angleDeg + 90}deg) rotateX(90deg)`;
+    knob.appendChild(side);
+  }
+  
+  // Top face
+  const top = document.createElement('div');
+  top.className = 'knob-top';
+  top.style.width = '36px';
+  top.style.height = '36px';
+  top.style.transform = `translateZ(${height}px)`;
+  
+  const indicator = document.createElement('div');
+  indicator.className = 'knob-indicator';
+  top.appendChild(indicator);
+  knob.appendChild(top);
+
+  parentEl.appendChild(knob);
+}
+
+function makeKey3D(id) {
+  const coord = KEY_3D_COORDS[id];
+  const k = keys.find(x => x.id === id);
+  const keyEl = document.createElement('div');
+  keyEl.className = `key-3d box-3d key-${id} ${coord.colorClass} ${coord.shape === 'circle' ? 'key-circle' : ''}`;
+  if (selectedId === id) {
+    keyEl.classList.add('selected');
+  }
+  keyEl.id = `key3d-${id}`;
+  keyEl.dataset.id = id;
+  keyEl.style.left = `${coord.x}px`;
+  keyEl.style.top = `${coord.y}px`;
+  keyEl.style.width = `${coord.w}px`;
+  keyEl.style.height = `${coord.h}px`;
+  keyEl.style.transform = 'translateZ(30px)'; // sits on the board plate
+
+  // Faces
+  const faces = ['top', 'front', 'back', 'left', 'right'];
+  faces.forEach(f => {
+    const face = document.createElement('div');
+    face.className = `key-face face-${f}`;
+    if (f === 'top') {
+      const numSpan = document.createElement('span');
+      numSpan.className = 'key3d-num';
+      numSpan.textContent = String(id).padStart(2, '0');
+      
+      const lblSpan = document.createElement('span');
+      lblSpan.className = 'key3d-lbl';
+      lblSpan.textContent = k ? k.label : '';
+      
+      face.appendChild(numSpan);
+      face.appendChild(lblSpan);
+    }
+    keyEl.appendChild(face);
+  });
+
+  // Action binding
+  keyEl.onclick = (e) => {
+    e.stopPropagation();
+    selectKey(id);
+    animate3DKeypress(id);
+  };
+
+  return keyEl;
+}
+
+function animate3DKeypress(id) {
+  const el = document.getElementById(`key3d-${id}`);
+  if (el) {
+    el.classList.add('active');
+    setTimeout(() => el.classList.remove('active'), 150);
+  }
+}
+
+function update3DSelection() {
+  document.querySelectorAll('.key-3d').forEach(el => {
+    const id = parseInt(el.dataset.id);
+    if (id === selectedId) {
+      el.classList.add('selected');
+    } else {
+      el.classList.remove('selected');
+    }
+  });
+}
+
+function update3DLabels() {
+  document.querySelectorAll('.key-3d').forEach(el => {
+    const id = parseInt(el.dataset.id);
+    const k = keys.find(x => x.id === id);
+    const lblSpan = el.querySelector('.key3d-lbl');
+    if (lblSpan && k) {
+      lblSpan.textContent = k.label || '';
+    }
+  });
+}
+
+function init3DDrag() {
+  const viewport = document.getElementById('keypad3DViewport');
+  const board = document.getElementById('keypad3DBoard');
+  
+  let isDragging = false;
+  let startX = 0, startY = 0;
+  let currentRotX = 55; // Default pitch
+  let currentRotZ = -25; // Default yaw
+  
+  viewport.addEventListener('mousedown', e => {
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    viewport.style.cursor = 'grabbing';
+  });
+  
+  document.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    
+    startX = e.clientX;
+    startY = e.clientY;
+    
+    currentRotZ += dx * 0.4;
+    currentRotX -= dy * 0.4;
+    
+    // Clamp pitch between 20 and 80 degrees
+    currentRotX = Math.max(20, Math.min(80, currentRotX));
+    
+    board.style.transform = `rotateX(${currentRotX}deg) rotateZ(${currentRotZ}deg)`;
+  });
+  
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      viewport.style.cursor = '';
+    }
+  });
+}
+
+// Show Apply button only if served from our server backend
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  const btn = document.getElementById('btnApplyDirect');
+  if (btn) btn.style.display = 'inline-flex';
+}
+
+// ─────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────
+renderKeypad();
+</script>
+</body>
+</html>
