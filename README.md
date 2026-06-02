@@ -12,7 +12,7 @@
 [![Release](https://img.shields.io/github/v/release/ycs-mb/macro-keypad-mac-driver?color=brightgreen)](https://github.com/ycs-mb/macro-keypad-mac-driver/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-green)](#)
 
-[**⬇ Download MacroPad v1.0.0**](https://github.com/ycs-mb/macro-keypad-mac-driver/releases/download/v1.0.1/MacroPad_1.0.1_aarch64.dmg)
+[**⬇ Download MacroPad v1.0.1**](https://github.com/ycs-mb/macro-keypad-mac-driver/releases/download/v1.0.1/MacroPad_1.0.1_aarch64.dmg)
 
 > The K809 has **no official macOS driver**. MacroPad gives it one — a native `.app` that configures all 20 keys visually, installs the Karabiner-Elements profile with one click, and monitors device connection in the menu bar.
 
