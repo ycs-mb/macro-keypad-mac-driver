@@ -1,4 +1,5 @@
 pub mod error;
+pub mod hid_monitor;
 pub mod karabiner;
 pub mod profile_store;
 
