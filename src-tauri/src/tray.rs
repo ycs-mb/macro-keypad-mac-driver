@@ -1,4 +1,4 @@
-use tauri::{tray::TrayIconBuilder, AppHandle, Manager, Runtime};
+use tauri::{tray::TrayIconBuilder, AppHandle, Runtime};
 
 pub fn setup_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     TrayIconBuilder::with_id("main")
