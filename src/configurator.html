@@ -1680,7 +1680,7 @@ const DEFAULT_KEYS = [
 
 // Bump when DEFAULT_KEYS schema/content changes so a stale localStorage copy
 // (e.g. from earlier testing) doesn't mask the new defaults on first load.
-const SCHEMA_VERSION = '5';
+const SCHEMA_VERSION = '6';
 if (localStorage.getItem('macropad-schema') !== SCHEMA_VERSION) {
   localStorage.removeItem('macropad-keys');
   localStorage.setItem('macropad-schema', SCHEMA_VERSION);
@@ -1798,13 +1798,136 @@ function deleteCurrentProfile() {
   showToast('Profile deleted: ' + active);
 }
 
+// ─────────────────────────────────────────────────────
+// PRESET PROFILES
+// ─────────────────────────────────────────────────────
+const PRESET_PROFILES = {
+  'Developer': [
+    { id:1,  label:'⌘S Save',         fromKeyType:'key_code', fromKey:'keypad_1',       action:{ type:'key',   keyCode:'s',             modifiers:['left_command'] } },
+    { id:2,  label:'⌘Z Undo',         fromKeyType:'key_code', fromKey:'keypad_2',       action:{ type:'key',   keyCode:'z',             modifiers:['left_command'] } },
+    { id:3,  label:'⌘⇧Z Redo',        fromKeyType:'key_code', fromKey:'keypad_3',       action:{ type:'key',   keyCode:'z',             modifiers:['left_command','left_shift'] } },
+    { id:4,  label:'⌘C Copy',         fromKeyType:'key_code', fromKey:'keypad_4',       action:{ type:'key',   keyCode:'c',             modifiers:['left_command'] } },
+    { id:5,  label:'⌘V Paste',        fromKeyType:'key_code', fromKey:'keypad_5',       action:{ type:'key',   keyCode:'v',             modifiers:['left_command'] } },
+    { id:6,  label:'⌘X Cut',          fromKeyType:'key_code', fromKey:'keypad_6',       action:{ type:'key',   keyCode:'x',             modifiers:['left_command'] } },
+    { id:7,  label:'⌘P Quick Open',   fromKeyType:'key_code', fromKey:'keypad_7',       action:{ type:'key',   keyCode:'p',             modifiers:['left_command'] } },
+    { id:8,  label:'⌘⇧P Palette',     fromKeyType:'key_code', fromKey:'keypad_8',       action:{ type:'key',   keyCode:'p',             modifiers:['left_command','left_shift'] } },
+    { id:9,  label:'⌘` Terminal',     fromKeyType:'key_code', fromKey:'keypad_9',       action:{ type:'key',   keyCode:'grave_accent_and_tilde', modifiers:['left_command'] } },
+    { id:10, label:'⌘B Sidebar',      fromKeyType:'key_code', fromKey:'keypad_0',       action:{ type:'key',   keyCode:'b',             modifiers:['left_command'] } },
+    { id:11, label:'⌘W Close Tab',    fromKeyType:'key_code', fromKey:'keypad_period',  action:{ type:'key',   keyCode:'w',             modifiers:['left_command'] } },
+    { id:12, label:'Screenshot',      fromKeyType:'key_code', fromKey:'keypad_enter',   action:{ type:'shell', command:'screencapture -i ~/Desktop/screenshot-$(date +%Y%m%d-%H%M%S).png' } },
+    { id:13, label:'⌘F Find',         fromKeyType:'key_code', fromKey:'keypad_hyphen',  action:{ type:'key',   keyCode:'f',             modifiers:['left_command'] } },
+    { id:14, label:'⌘⇧F Find Files',  fromKeyType:'key_code', fromKey:'keypad_plus',    action:{ type:'key',   keyCode:'f',             modifiers:['left_command','left_shift'] } },
+    { id:15, label:'⌘Space Spotlight',fromKeyType:'key_code', fromKey:'spacebar',       action:{ type:'key',   keyCode:'spacebar',      modifiers:['left_command'] } },
+    { id:16, label:'↓',               fromKeyType:'key_code', fromKey:'down_arrow',     action:{ type:'key',   keyCode:'down_arrow',    modifiers:[] } },
+    { id:17, label:'←',               fromKeyType:'key_code', fromKey:'left_arrow',     action:{ type:'key',   keyCode:'left_arrow',    modifiers:[] } },
+    { id:18, label:'→',               fromKeyType:'key_code', fromKey:'right_arrow',    action:{ type:'key',   keyCode:'right_arrow',   modifiers:[] } },
+    { id:19, label:'↑',               fromKeyType:'key_code', fromKey:'up_arrow',       action:{ type:'key',   keyCode:'up_arrow',      modifiers:[] } },
+    { id:20, label:'⌘⇥ App Switch',   fromKeyType:'key_code', fromKey:'return_or_enter',action:{ type:'key',   keyCode:'tab',           modifiers:['left_command'] } },
+  ],
+  'Creative': [
+    { id:1,  label:'⌘Z Undo',         fromKeyType:'key_code', fromKey:'keypad_1',       action:{ type:'key',   keyCode:'z',             modifiers:['left_command'] } },
+    { id:2,  label:'⌘⇧Z Redo',        fromKeyType:'key_code', fromKey:'keypad_2',       action:{ type:'key',   keyCode:'z',             modifiers:['left_command','left_shift'] } },
+    { id:3,  label:'⌘C Copy',         fromKeyType:'key_code', fromKey:'keypad_3',       action:{ type:'key',   keyCode:'c',             modifiers:['left_command'] } },
+    { id:4,  label:'⌘V Paste',        fromKeyType:'key_code', fromKey:'keypad_4',       action:{ type:'key',   keyCode:'v',             modifiers:['left_command'] } },
+    { id:5,  label:'⌘D Duplicate',    fromKeyType:'key_code', fromKey:'keypad_5',       action:{ type:'key',   keyCode:'d',             modifiers:['left_command'] } },
+    { id:6,  label:'⌘G Group',        fromKeyType:'key_code', fromKey:'keypad_6',       action:{ type:'key',   keyCode:'g',             modifiers:['left_command'] } },
+    { id:7,  label:'⌘⇧G Ungroup',     fromKeyType:'key_code', fromKey:'keypad_7',       action:{ type:'key',   keyCode:'g',             modifiers:['left_command','left_shift'] } },
+    { id:8,  label:'⌘R Rulers',       fromKeyType:'key_code', fromKey:'keypad_8',       action:{ type:'key',   keyCode:'r',             modifiers:['left_command'] } },
+    { id:9,  label:'⌘+ Zoom In',      fromKeyType:'key_code', fromKey:'keypad_9',       action:{ type:'key',   keyCode:'equal_sign',    modifiers:['left_command'] } },
+    { id:10, label:'⌘- Zoom Out',     fromKeyType:'key_code', fromKey:'keypad_0',       action:{ type:'key',   keyCode:'hyphen',        modifiers:['left_command'] } },
+    { id:11, label:'⌘⇧E Export',      fromKeyType:'key_code', fromKey:'keypad_period',  action:{ type:'key',   keyCode:'e',             modifiers:['left_command','left_shift'] } },
+    { id:12, label:'Screenshot',      fromKeyType:'key_code', fromKey:'keypad_enter',   action:{ type:'shell', command:'screencapture -i ~/Desktop/screenshot-$(date +%Y%m%d-%H%M%S).png' } },
+    { id:13, label:'⌘[ Send Back',    fromKeyType:'key_code', fromKey:'keypad_hyphen',  action:{ type:'key',   keyCode:'open_bracket',  modifiers:['left_command'] } },
+    { id:14, label:'⌘] Send Fwd',     fromKeyType:'key_code', fromKey:'keypad_plus',    action:{ type:'key',   keyCode:'close_bracket', modifiers:['left_command'] } },
+    { id:15, label:'⌘Space Spotlight',fromKeyType:'key_code', fromKey:'spacebar',       action:{ type:'key',   keyCode:'spacebar',      modifiers:['left_command'] } },
+    { id:16, label:'↓',               fromKeyType:'key_code', fromKey:'down_arrow',     action:{ type:'key',   keyCode:'down_arrow',    modifiers:[] } },
+    { id:17, label:'←',               fromKeyType:'key_code', fromKey:'left_arrow',     action:{ type:'key',   keyCode:'left_arrow',    modifiers:[] } },
+    { id:18, label:'→',               fromKeyType:'key_code', fromKey:'right_arrow',    action:{ type:'key',   keyCode:'right_arrow',   modifiers:[] } },
+    { id:19, label:'↑',               fromKeyType:'key_code', fromKey:'up_arrow',       action:{ type:'key',   keyCode:'up_arrow',      modifiers:[] } },
+    { id:20, label:'⌘⇥ App Switch',   fromKeyType:'key_code', fromKey:'return_or_enter',action:{ type:'key',   keyCode:'tab',           modifiers:['left_command'] } },
+  ],
+  'Media': [
+    { id:1,  label:'⏮ Prev Track',    fromKeyType:'key_code', fromKey:'keypad_1',       action:{ type:'media', mediaCode:'rewind' } },
+    { id:2,  label:'⏯ Play/Pause',    fromKeyType:'key_code', fromKey:'keypad_2',       action:{ type:'media', mediaCode:'play_or_pause' } },
+    { id:3,  label:'⏭ Next Track',    fromKeyType:'key_code', fromKey:'keypad_3',       action:{ type:'media', mediaCode:'fast_forward' } },
+    { id:4,  label:'🔇 Mute',         fromKeyType:'key_code', fromKey:'keypad_4',       action:{ type:'key',   keyCode:'mute',          modifiers:[] } },
+    { id:5,  label:'Vol-',            fromKeyType:'key_code', fromKey:'keypad_5',       action:{ type:'media', mediaCode:'volume_decrement' } },
+    { id:6,  label:'Vol+',            fromKeyType:'key_code', fromKey:'keypad_6',       action:{ type:'media', mediaCode:'volume_increment' } },
+    { id:7,  label:'⌘⇧M Mute Mic',   fromKeyType:'key_code', fromKey:'keypad_7',       action:{ type:'key',   keyCode:'m',             modifiers:['left_command','left_shift'] } },
+    { id:8,  label:'⌘⇧V Video',      fromKeyType:'key_code', fromKey:'keypad_8',       action:{ type:'key',   keyCode:'v',             modifiers:['left_command','left_shift'] } },
+    { id:9,  label:'Mission Control', fromKeyType:'key_code', fromKey:'keypad_9',       action:{ type:'media', mediaCode:'mission_control' } },
+    { id:10, label:'⌘F Fullscreen',   fromKeyType:'key_code', fromKey:'keypad_0',       action:{ type:'key',   keyCode:'f',             modifiers:['left_command'] } },
+    { id:11, label:'Screenshot',      fromKeyType:'key_code', fromKey:'keypad_period',  action:{ type:'shell', command:'screencapture -i ~/Desktop/screenshot-$(date +%Y%m%d-%H%M%S).png' } },
+    { id:12, label:'⌘⇥ App Switch',   fromKeyType:'key_code', fromKey:'keypad_enter',   action:{ type:'key',   keyCode:'tab',           modifiers:['left_command'] } },
+    { id:13, label:'⌘[ Back',         fromKeyType:'key_code', fromKey:'keypad_hyphen',  action:{ type:'key',   keyCode:'open_bracket',  modifiers:['left_command'] } },
+    { id:14, label:'⌘] Forward',      fromKeyType:'key_code', fromKey:'keypad_plus',    action:{ type:'key',   keyCode:'close_bracket', modifiers:['left_command'] } },
+    { id:15, label:'⌘Space Spotlight',fromKeyType:'key_code', fromKey:'spacebar',       action:{ type:'key',   keyCode:'spacebar',      modifiers:['left_command'] } },
+    { id:16, label:'↓',               fromKeyType:'key_code', fromKey:'down_arrow',     action:{ type:'key',   keyCode:'down_arrow',    modifiers:[] } },
+    { id:17, label:'←',               fromKeyType:'key_code', fromKey:'left_arrow',     action:{ type:'key',   keyCode:'left_arrow',    modifiers:[] } },
+    { id:18, label:'→',               fromKeyType:'key_code', fromKey:'right_arrow',    action:{ type:'key',   keyCode:'right_arrow',   modifiers:[] } },
+    { id:19, label:'↑',               fromKeyType:'key_code', fromKey:'up_arrow',       action:{ type:'key',   keyCode:'up_arrow',      modifiers:[] } },
+    { id:20, label:'↵ Return',        fromKeyType:'key_code', fromKey:'return_or_enter',action:{ type:'key',   keyCode:'return_or_enter',modifiers:[] } },
+  ],
+  'Productivity': [
+    { id:1,  label:'⌘S Save',         fromKeyType:'key_code', fromKey:'keypad_1',       action:{ type:'key',   keyCode:'s',             modifiers:['left_command'] } },
+    { id:2,  label:'⌘Z Undo',         fromKeyType:'key_code', fromKey:'keypad_2',       action:{ type:'key',   keyCode:'z',             modifiers:['left_command'] } },
+    { id:3,  label:'⌘⇧Z Redo',        fromKeyType:'key_code', fromKey:'keypad_3',       action:{ type:'key',   keyCode:'z',             modifiers:['left_command','left_shift'] } },
+    { id:4,  label:'⌘C Copy',         fromKeyType:'key_code', fromKey:'keypad_4',       action:{ type:'key',   keyCode:'c',             modifiers:['left_command'] } },
+    { id:5,  label:'⌘V Paste',        fromKeyType:'key_code', fromKey:'keypad_5',       action:{ type:'key',   keyCode:'v',             modifiers:['left_command'] } },
+    { id:6,  label:'⌘X Cut',          fromKeyType:'key_code', fromKey:'keypad_6',       action:{ type:'key',   keyCode:'x',             modifiers:['left_command'] } },
+    { id:7,  label:'⌘B Bold',         fromKeyType:'key_code', fromKey:'keypad_7',       action:{ type:'key',   keyCode:'b',             modifiers:['left_command'] } },
+    { id:8,  label:'⌘I Italic',       fromKeyType:'key_code', fromKey:'keypad_8',       action:{ type:'key',   keyCode:'i',             modifiers:['left_command'] } },
+    { id:9,  label:'⌘U Underline',    fromKeyType:'key_code', fromKey:'keypad_9',       action:{ type:'key',   keyCode:'u',             modifiers:['left_command'] } },
+    { id:10, label:'⌘K Link',         fromKeyType:'key_code', fromKey:'keypad_0',       action:{ type:'key',   keyCode:'k',             modifiers:['left_command'] } },
+    { id:11, label:'⌘A Select All',   fromKeyType:'key_code', fromKey:'keypad_period',  action:{ type:'key',   keyCode:'a',             modifiers:['left_command'] } },
+    { id:12, label:'Screenshot',      fromKeyType:'key_code', fromKey:'keypad_enter',   action:{ type:'shell', command:'screencapture -i ~/Desktop/screenshot-$(date +%Y%m%d-%H%M%S).png' } },
+    { id:13, label:'⌘N New Doc',      fromKeyType:'key_code', fromKey:'keypad_hyphen',  action:{ type:'key',   keyCode:'n',             modifiers:['left_command'] } },
+    { id:14, label:'⌘P Print',        fromKeyType:'key_code', fromKey:'keypad_plus',    action:{ type:'key',   keyCode:'p',             modifiers:['left_command'] } },
+    { id:15, label:'⌘Space Spotlight',fromKeyType:'key_code', fromKey:'spacebar',       action:{ type:'key',   keyCode:'spacebar',      modifiers:['left_command'] } },
+    { id:16, label:'↓',               fromKeyType:'key_code', fromKey:'down_arrow',     action:{ type:'key',   keyCode:'down_arrow',    modifiers:[] } },
+    { id:17, label:'←',               fromKeyType:'key_code', fromKey:'left_arrow',     action:{ type:'key',   keyCode:'left_arrow',    modifiers:[] } },
+    { id:18, label:'→',               fromKeyType:'key_code', fromKey:'right_arrow',    action:{ type:'key',   keyCode:'right_arrow',   modifiers:[] } },
+    { id:19, label:'↑',               fromKeyType:'key_code', fromKey:'up_arrow',       action:{ type:'key',   keyCode:'up_arrow',      modifiers:[] } },
+    { id:20, label:'⌘⇥ App Switch',   fromKeyType:'key_code', fromKey:'return_or_enter',action:{ type:'key',   keyCode:'tab',           modifiers:['left_command'] } },
+  ],
+  'Browser': [
+    { id:1,  label:'⌘T New Tab',      fromKeyType:'key_code', fromKey:'keypad_1',       action:{ type:'key',   keyCode:'t',             modifiers:['left_command'] } },
+    { id:2,  label:'⌘W Close Tab',    fromKeyType:'key_code', fromKey:'keypad_2',       action:{ type:'key',   keyCode:'w',             modifiers:['left_command'] } },
+    { id:3,  label:'⌘⇧T Reopen Tab', fromKeyType:'key_code', fromKey:'keypad_3',       action:{ type:'key',   keyCode:'t',             modifiers:['left_command','left_shift'] } },
+    { id:4,  label:'⌘R Refresh',      fromKeyType:'key_code', fromKey:'keypad_4',       action:{ type:'key',   keyCode:'r',             modifiers:['left_command'] } },
+    { id:5,  label:'⌘L Address Bar',  fromKeyType:'key_code', fromKey:'keypad_5',       action:{ type:'key',   keyCode:'l',             modifiers:['left_command'] } },
+    { id:6,  label:'⌘F Find',         fromKeyType:'key_code', fromKey:'keypad_6',       action:{ type:'key',   keyCode:'f',             modifiers:['left_command'] } },
+    { id:7,  label:'⌘[ Back',         fromKeyType:'key_code', fromKey:'keypad_7',       action:{ type:'key',   keyCode:'open_bracket',  modifiers:['left_command'] } },
+    { id:8,  label:'⌘] Forward',      fromKeyType:'key_code', fromKey:'keypad_8',       action:{ type:'key',   keyCode:'close_bracket', modifiers:['left_command'] } },
+    { id:9,  label:'⌘⇧N Incognito',  fromKeyType:'key_code', fromKey:'keypad_9',       action:{ type:'key',   keyCode:'n',             modifiers:['left_command','left_shift'] } },
+    { id:10, label:'⌘D Bookmark',     fromKeyType:'key_code', fromKey:'keypad_0',       action:{ type:'key',   keyCode:'d',             modifiers:['left_command'] } },
+    { id:11, label:'⌘⇧D Bkmark All', fromKeyType:'key_code', fromKey:'keypad_period',  action:{ type:'key',   keyCode:'d',             modifiers:['left_command','left_shift'] } },
+    { id:12, label:'Screenshot',      fromKeyType:'key_code', fromKey:'keypad_enter',   action:{ type:'shell', command:'screencapture -i ~/Desktop/screenshot-$(date +%Y%m%d-%H%M%S).png' } },
+    { id:13, label:'⌘⌥← Prev Tab',   fromKeyType:'key_code', fromKey:'keypad_hyphen',  action:{ type:'key',   keyCode:'left_arrow',    modifiers:['left_command','left_option'] } },
+    { id:14, label:'⌘⌥→ Next Tab',   fromKeyType:'key_code', fromKey:'keypad_plus',    action:{ type:'key',   keyCode:'right_arrow',   modifiers:['left_command','left_option'] } },
+    { id:15, label:'⌘Space Spotlight',fromKeyType:'key_code', fromKey:'spacebar',       action:{ type:'key',   keyCode:'spacebar',      modifiers:['left_command'] } },
+    { id:16, label:'↓',               fromKeyType:'key_code', fromKey:'down_arrow',     action:{ type:'key',   keyCode:'down_arrow',    modifiers:[] } },
+    { id:17, label:'←',               fromKeyType:'key_code', fromKey:'left_arrow',     action:{ type:'key',   keyCode:'left_arrow',    modifiers:[] } },
+    { id:18, label:'→',               fromKeyType:'key_code', fromKey:'right_arrow',    action:{ type:'key',   keyCode:'right_arrow',   modifiers:[] } },
+    { id:19, label:'↑',               fromKeyType:'key_code', fromKey:'up_arrow',       action:{ type:'key',   keyCode:'up_arrow',      modifiers:[] } },
+    { id:20, label:'⌘⇥ App Switch',   fromKeyType:'key_code', fromKey:'return_or_enter',action:{ type:'key',   keyCode:'tab',           modifiers:['left_command'] } },
+  ],
+};
+
 // Init: ensure Default profile snapshot exists, restore last active profile
 (function initProfiles() {
   var profiles = loadAllProfiles();
+  // seed Default
   if (!profiles[DEFAULT_PROFILE]) {
     profiles[DEFAULT_PROFILE] = { keys: DEFAULT_KEYS.map(function(k){ return Object.assign({},k); }), createdAt: Date.now() };
-    saveAllProfiles(profiles);
   }
+  // seed presets (never overwrite user-customised versions)
+  Object.keys(PRESET_PROFILES).forEach(function(name) {
+    if (!profiles[name]) {
+      profiles[name] = { keys: PRESET_PROFILES[name].map(function(k){ return Object.assign({},k); }), createdAt: Date.now() };
+    }
+  });
+  saveAllProfiles(profiles);
   var active = getActiveProfileName();
   // Pre-seed macropad-keys so the let keys = ... declaration below reads the right profile
   if (active !== DEFAULT_PROFILE && profiles[active]) {
