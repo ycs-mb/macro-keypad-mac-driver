@@ -1892,7 +1892,7 @@ dependencies = [
 
 [[package]]
 name = "macropad"
-version = "1.0.3"
+version = "1.1.0"
 dependencies = [
  "dirs 5.0.1",
  "hidapi",
