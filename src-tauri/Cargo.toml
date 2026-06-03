@@ -1,6 +1,6 @@
 [package]
 name = "macropad"
-version = "1.0.2"
+version = "1.0.3"
 description = "Native macOS configurator for INSTANT K809 macro keypad"
 authors = ["ycs"]
 license = "MIT"
