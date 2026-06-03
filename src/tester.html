@@ -309,15 +309,204 @@
     justify-content: center;
   }
 
-  /* Red accent keycaps matching physical keys */
+  /* ─── JOYSTICK WIDGET (replaces D-pad grid) ─── */
+  .joystick-widget {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: linear-gradient(165deg, #3d141b 0%, #1f0b0d 100%);
+    border: 2px solid rgba(239, 68, 68, 0.45);
+    box-shadow:
+      0 0 18px rgba(239, 68, 68, 0.15),
+      0 4px 16px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .halo-ring {
+    position: absolute;
+    width: 132px;
+    height: 132px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background-origin: border-box;
+    background-clip: border-box;
+    background-image:
+      conic-gradient(from 0deg,
+        var(--amber)     0deg,
+        var(--amber-dim) 110deg,
+        var(--amber)     200deg,
+        var(--border)    300deg,
+        var(--amber)     360deg
+      );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) padding-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    animation: js-halo-spin 5s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes js-halo-spin { to { transform: rotate(360deg); } }
+
+  .js-quad-ring {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    z-index: 1;
+    background: #0c0c16;
+  }
+  .js-quad {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    transition: filter 0.15s, background 0.2s;
+    background: var(--amber-dim);
+  }
+  .js-quad[data-dir="up"]    { clip-path: polygon(0 0, 100% 0, 50% 50%); }
+  .js-quad[data-dir="right"] { clip-path: polygon(100% 0, 100% 100%, 50% 50%); }
+  .js-quad[data-dir="down"]  { clip-path: polygon(100% 100%, 0 100%, 50% 50%); }
+  .js-quad[data-dir="left"]  { clip-path: polygon(0 100%, 0 0, 50% 50%); }
+
+  .js-quad.untested { background: rgba(13, 13, 26, 0.62); }
+  .js-quad.pass {
+    background: radial-gradient(circle at center, rgba(52,211,153,0.30), var(--green-dim));
+  }
+  .js-quad.fail {
+    background: radial-gradient(circle at center, rgba(255,68,102,0.32), var(--red-dim));
+    animation: js-quad-fail-pulse 0.6s ease;
+  }
+  .js-quad:hover { filter: brightness(1.4); }
+  @keyframes js-quad-fail-pulse {
+    0% { filter: brightness(1); } 40% { filter: brightness(1.7); } 100% { filter: brightness(1); }
+  }
+
+  .js-quad-glyph {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  .js-quad.pass .js-quad-glyph { color: var(--green); }
+  .js-quad.fail .js-quad-glyph { color: var(--red); }
+  .js-quad[data-dir="up"]    .js-quad-glyph { top: 9px;    left: 50%; transform: translateX(-50%); }
+  .js-quad[data-dir="right"] .js-quad-glyph { right: 9px;  top: 50%;  transform: translateY(-50%); }
+  .js-quad[data-dir="down"]  .js-quad-glyph { bottom: 9px; left: 50%; transform: translateX(-50%); }
+  .js-quad[data-dir="left"]  .js-quad-glyph { left: 9px;   top: 50%;  transform: translateY(-50%); }
+
+  .js-crosshair-h, .js-crosshair-v {
+    position: absolute;
+    background: var(--bg-base);
+    z-index: 2;
+    pointer-events: none;
+  }
+  .js-crosshair-h { width: 120px; height: 2px; }
+  .js-crosshair-v { width: 2px; height: 120px; }
+
+  .joystick-gate {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #1a0a0d, #0d070e);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .joystick-nub {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #3a2a08, #1a1200);
+    border: 1.5px solid var(--amber);
+    box-shadow: 0 0 10px var(--amber-glow), 0 3px 8px rgba(0, 0, 0, 0.7), inset 0 1px 0 var(--amber-dim);
+    position: relative;
+    z-index: 4;
+    cursor: grab;
+    flex-shrink: 0;
+    pointer-events: auto;
+    transition: box-shadow 0.1s, filter 0.1s;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+  .joystick-nub.pass {
+    background: radial-gradient(circle at 35% 30%, #0a2018, #081a14);
+    border-color: var(--green);
+    box-shadow: 0 0 14px var(--green-glow), 0 3px 8px rgba(0,0,0,0.7);
+    color: var(--green);
+  }
+  .joystick-nub.fail {
+    background: radial-gradient(circle at 35% 30%, #2a0a12, #1a0a10);
+    border-color: var(--red);
+    box-shadow: 0 0 14px var(--red-glow), 0 3px 8px rgba(0,0,0,0.7);
+    color: var(--red);
+    animation: js-quad-fail-pulse 0.6s ease;
+  }
+  .joystick-nub.js-pressed {
+    box-shadow: 0 0 20px var(--amber-glow), 0 0 40px var(--amber-dim), 0 1px 3px rgba(0,0,0,0.8) !important;
+    filter: brightness(1.5);
+  }
+
+  .js-quad.active-flash, .joystick-nub.active-flash {
+    animation: key-flash 0.35s ease;
+  }
+
+  .nub-ripple {
+    position: absolute;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid var(--amber);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  @keyframes js-ripple {
+    0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.85; }
+    100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; }
+  }
+  .nub-ripple.js-fire { animation: js-ripple 0.45s ease-out forwards; }
+
+  .js-key-badge {
+    position: absolute;
+    top: 6px; right: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-subtle);
+    border-radius: 3px;
+    padding: 1px 4px;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* Red accent keycaps matching physical keys
+     (keys 16-20 removed — they are now the joystick widget, not .key keycaps) */
   #key-1:not(.pass):not(.fail),
   #key-12:not(.pass):not(.fail),
-  #key-13:not(.pass):not(.fail),
-  #key-16:not(.pass):not(.fail),
-  #key-17:not(.pass):not(.fail),
-  #key-18:not(.pass):not(.fail),
-  #key-19:not(.pass):not(.fail),
-  #key-20:not(.pass):not(.fail) {
+  #key-13:not(.pass):not(.fail) {
     background: linear-gradient(165deg, #3d141b 0%, #1f0b0d 100%);
     border-color: rgba(239, 68, 68, 0.45);
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.15), inset 0 1px 0 rgba(255,255,255,0.02);
@@ -1290,6 +1479,13 @@ keys.forEach(k => {
 const state = {};
 KEYS.forEach(k => state[k.id] = 'untested');
 
+// Joystick drag state — module-level to prevent listener accumulation on re-renders
+let _jsDragging = false;
+let _jsIsClick  = false;
+let _jsOriginX  = 0;
+let _jsOriginY  = 0;
+let _jsAbort    = null;
+
 // Track which key is currently physically held down (for press/release animations)
 let pressedKeyId = null;
 let pressedKeyFreshPass = false;
@@ -1382,43 +1578,8 @@ function renderKeypad() {
   mainSection.appendChild(keysGrid);
   grid.appendChild(mainSection);
 
-  // Create D-pad Section
-  const dpadSection = document.createElement('div');
-  dpadSection.className = 'keypad-dpad-section';
-  
-  const dpadTitle = document.createElement('div');
-  dpadTitle.className = 'section-label';
-  dpadTitle.textContent = 'D-Pad';
-  dpadSection.appendChild(dpadTitle);
-
-  const dpadGrid = document.createElement('div');
-  dpadGrid.className = 'dpad-grid';
-
-  // Up, Left, Center, Right, Down
-  const dpadLayout = [
-    null, 19, null,
-    17, 20, 18,
-    null, 16, null
-  ];
-
-  dpadLayout.forEach(id => {
-    if (id === null) {
-      const empty = document.createElement('div');
-      empty.className = 'dpad-empty';
-      dpadGrid.appendChild(empty);
-    } else {
-      const keyEl = makeKey(id);
-      if (id === 20) {
-        keyEl.classList.add('key-dpad-center');
-      } else {
-        keyEl.classList.add('key-dpad');
-      }
-      dpadGrid.appendChild(keyEl);
-    }
-  });
-
-  dpadSection.appendChild(dpadGrid);
-  grid.appendChild(dpadSection);
+  // Joystick section (replaces old D-pad grid for keys 16-20)
+  grid.appendChild(buildJoystickSection());
 
   updateStats();
   if (viewMode === '3d') {
@@ -1455,6 +1616,158 @@ function makeKey(id) {
   el.appendChild(lblEl);
   el.appendChild(fromEl);
   return el;
+}
+
+function buildJoystickSection() {
+  const DIRS = [
+    { id: 19, dir: 'up',    arrow: '▲' },
+    { id: 18, dir: 'right', arrow: '▶' },
+    { id: 16, dir: 'down',  arrow: '▼' },
+    { id: 17, dir: 'left',  arrow: '◀' },
+  ];
+
+  if (_jsAbort) _jsAbort.abort();
+  _jsAbort = new AbortController();
+  const { signal } = _jsAbort;
+
+  const section = document.createElement('div');
+  section.className = 'keypad-dpad-section';
+
+  const title = document.createElement('div');
+  title.className = 'section-label';
+  title.textContent = 'JOYSTICK';
+  section.appendChild(title);
+
+  const widget = document.createElement('div');
+  widget.className = 'joystick-widget';
+
+  const halo = document.createElement('div');
+  halo.className = 'halo-ring';
+  widget.appendChild(halo);
+
+  const quadRing = document.createElement('div');
+  quadRing.className = 'js-quad-ring';
+  DIRS.forEach(d => {
+    const k = KEYS.find(x => x.id === d.id);
+    const quad = document.createElement('div');
+    quad.className = `js-quad ${state[d.id]}`;
+    quad.id = `key-${d.id}`;
+    quad.dataset.dir = d.dir;
+    quad.title = `Key ${d.id}: ${k.label}\nClick to toggle pass/untested`;
+    const glyph = document.createElement('div');
+    glyph.className = 'js-quad-glyph';
+    glyph.textContent = state[d.id] === 'pass' ? '✓'
+                      : state[d.id] === 'fail' ? '✗'
+                      :                          d.arrow;
+    quad.appendChild(glyph);
+    quad.addEventListener('click', () => toggleManualPass(d.id));
+    quadRing.appendChild(quad);
+  });
+  widget.appendChild(quadRing);
+
+  const chH = document.createElement('div'); chH.className = 'js-crosshair-h'; widget.appendChild(chH);
+  const chV = document.createElement('div'); chV.className = 'js-crosshair-v'; widget.appendChild(chV);
+
+  const badge = document.createElement('div');
+  badge.className = 'js-key-badge';
+  badge.textContent = '20';
+  widget.appendChild(badge);
+
+  const gate = document.createElement('div');
+  gate.className = 'joystick-gate';
+
+  const nub = document.createElement('div');
+  nub.className = `joystick-nub ${state[20]}`;
+  nub.id = 'key-20';
+  const k20 = KEYS.find(x => x.id === 20);
+  nub.title = `Key 20: ${k20 ? k20.label : 'D-Pad Center'}\nClick to toggle pass/untested`;
+  nub.textContent = state[20] === 'pass' ? '✓' : state[20] === 'fail' ? '✗' : '20';
+  gate.appendChild(nub);
+
+  const ripple = document.createElement('div');
+  ripple.className = 'nub-ripple';
+  gate.appendChild(ripple);
+
+  widget.appendChild(gate);
+  section.appendChild(widget);
+
+  const MAX_R = 20;
+
+  nub.addEventListener('mousedown', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    _jsDragging = true;
+    _jsIsClick  = true;
+    const r = gate.getBoundingClientRect();
+    _jsOriginX = r.left + r.width  / 2;
+    _jsOriginY = r.top  + r.height / 2;
+    nub.classList.add('js-pressed');
+    nub.style.transition = '';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!_jsDragging) return;
+    _jsIsClick = false;
+    let dx = e.clientX - _jsOriginX;
+    let dy = e.clientY - _jsOriginY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > MAX_R) { dx = (dx / dist) * MAX_R; dy = (dy / dist) * MAX_R; }
+    nub.style.transform = `translate(${dx}px, ${dy}px)`;
+  }, { signal });
+
+  document.addEventListener('mouseup', () => {
+    if (!_jsDragging) return;
+    _jsDragging = false;
+    nub.classList.remove('js-pressed');
+    nub.style.transition = 'transform 0.22s cubic-bezier(0.25,0.8,0.25,1), box-shadow 0.15s, filter 0.15s';
+    nub.style.transform = 'translate(0, 0)';
+    setTimeout(() => { nub.style.transition = ''; }, 240);
+    if (_jsIsClick) { _fireNubRipple(ripple); toggleManualPass(20); }
+    _jsIsClick = false;
+  }, { signal });
+
+  nub.addEventListener('touchstart', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    const r = gate.getBoundingClientRect();
+    _jsDragging = true;
+    _jsIsClick  = true;
+    _jsOriginX  = r.left + r.width  / 2;
+    _jsOriginY  = r.top  + r.height / 2;
+    nub.classList.add('js-pressed');
+    nub.style.transition = '';
+  }, { passive: false });
+
+  document.addEventListener('touchmove', e => {
+    if (!_jsDragging) return;
+    e.preventDefault();
+    _jsIsClick = false;
+    const t = e.touches[0];
+    let dx = t.clientX - _jsOriginX;
+    let dy = t.clientY - _jsOriginY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > MAX_R) { dx = (dx / dist) * MAX_R; dy = (dy / dist) * MAX_R; }
+    nub.style.transform = `translate(${dx}px, ${dy}px)`;
+  }, { passive: false, signal });
+
+  document.addEventListener('touchend', () => {
+    if (!_jsDragging) return;
+    _jsDragging = false;
+    nub.classList.remove('js-pressed');
+    nub.style.transition = 'transform 0.22s cubic-bezier(0.25,0.8,0.25,1)';
+    nub.style.transform  = 'translate(0, 0)';
+    setTimeout(() => { nub.style.transition = ''; }, 240);
+    if (_jsIsClick) { _fireNubRipple(ripple); toggleManualPass(20); }
+    _jsIsClick = false;
+  }, { signal });
+
+  return section;
+}
+
+function _fireNubRipple(ripple) {
+  ripple.classList.remove('js-fire');
+  void ripple.offsetWidth;
+  ripple.classList.add('js-fire');
 }
 
 function flashKey(id) {
