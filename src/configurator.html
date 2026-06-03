@@ -29,6 +29,7 @@
     --c-media:   #34D399;
     --c-app:     #FBBF24;
     --c-text:    #E879F9;
+    --c-mouse:   #38BDF8;
     --c-none:    #334155;
 
     --radius:    8px;
@@ -758,6 +759,7 @@
   .action-type-btn[data-type="media"]   { color: var(--c-media);  }
   .action-type-btn[data-type="app"]     { color: var(--c-app);    }
   .action-type-btn[data-type="text"]    { color: var(--c-text);   }
+  .action-type-btn[data-type="mouse"]   { color: var(--c-mouse);  }
   .action-type-btn:not(.active)         { color: var(--text-muted); }
 
   /* Sub-fields per action type */
@@ -1505,6 +1507,9 @@
               <button class="action-type-btn" data-type="text" onclick="setActionType('text')">
                 <span class="dot"></span>Text
               </button>
+              <button class="action-type-btn" data-type="mouse" onclick="setActionType('mouse')">
+                <span class="dot"></span>Mouse
+              </button>
             </div>
           </div>
 
@@ -1567,6 +1572,29 @@
             <div class="field">
               <div class="field-label">Text to Type</div>
               <textarea id="fText" placeholder="Hello World&#10;my@email.com&#10;git commit -m &quot;&quot;"></textarea>
+            </div>
+          </div>
+
+          <!-- Mouse fields -->
+          <div class="action-fields" id="fields-mouse">
+            <div class="field">
+              <div class="field-label">Mouse Action</div>
+              <div class="media-grid" id="mouseGrid">
+                <div class="media-btn" data-action="move_up"     onclick="selectMouse(this)">↑ Move Up</div>
+                <div class="media-btn" data-action="move_down"   onclick="selectMouse(this)">↓ Move Down</div>
+                <div class="media-btn" data-action="move_left"   onclick="selectMouse(this)">← Move Left</div>
+                <div class="media-btn" data-action="move_right"  onclick="selectMouse(this)">→ Move Right</div>
+                <div class="media-btn" data-action="fast_up"     onclick="selectMouse(this)">⇈ Fast Up</div>
+                <div class="media-btn" data-action="fast_down"   onclick="selectMouse(this)">⇊ Fast Down</div>
+                <div class="media-btn" data-action="fast_left"   onclick="selectMouse(this)">⇇ Fast Left</div>
+                <div class="media-btn" data-action="fast_right"  onclick="selectMouse(this)">⇉ Fast Right</div>
+                <div class="media-btn" data-action="click_left"  onclick="selectMouse(this)">🖱 Left Click</div>
+                <div class="media-btn" data-action="click_right" onclick="selectMouse(this)">🖱 Right Click</div>
+                <div class="media-btn" data-action="scroll_up"   onclick="selectMouse(this)">↑ Scroll Up</div>
+                <div class="media-btn" data-action="scroll_down" onclick="selectMouse(this)">↓ Scroll Down</div>
+                <div class="media-btn" data-action="scroll_left" onclick="selectMouse(this)">← Scroll Left</div>
+                <div class="media-btn" data-action="scroll_right"onclick="selectMouse(this)">→ Scroll Right</div>
+              </div>
             </div>
           </div>
 
@@ -1680,7 +1708,7 @@ const DEFAULT_KEYS = [
 
 // Bump when DEFAULT_KEYS schema/content changes so a stale localStorage copy
 // (e.g. from earlier testing) doesn't mask the new defaults on first load.
-const SCHEMA_VERSION = '6';
+const SCHEMA_VERSION = '7';
 if (localStorage.getItem('macropad-schema') !== SCHEMA_VERSION) {
   localStorage.removeItem('macropad-keys');
   localStorage.setItem('macropad-schema', SCHEMA_VERSION);
@@ -1911,6 +1939,28 @@ const PRESET_PROFILES = {
     { id:18, label:'→',               fromKeyType:'key_code', fromKey:'right_arrow',    action:{ type:'key',   keyCode:'right_arrow',   modifiers:[] } },
     { id:19, label:'↑',               fromKeyType:'key_code', fromKey:'up_arrow',       action:{ type:'key',   keyCode:'up_arrow',      modifiers:[] } },
     { id:20, label:'⌘⇥ App Switch',   fromKeyType:'key_code', fromKey:'return_or_enter',action:{ type:'key',   keyCode:'tab',           modifiers:['left_command'] } },
+  ],
+  'Mouse Control': [
+    { id:1,  label:'⌘S Save',          fromKeyType:'key_code', fromKey:'keypad_1',        action:{ type:'key',   keyCode:'s',             modifiers:['left_command'] } },
+    { id:2,  label:'⌘C Copy',          fromKeyType:'key_code', fromKey:'keypad_2',        action:{ type:'key',   keyCode:'c',             modifiers:['left_command'] } },
+    { id:3,  label:'⌘V Paste',         fromKeyType:'key_code', fromKey:'keypad_3',        action:{ type:'key',   keyCode:'v',             modifiers:['left_command'] } },
+    { id:4,  label:'⌘Z Undo',          fromKeyType:'key_code', fromKey:'keypad_4',        action:{ type:'key',   keyCode:'z',             modifiers:['left_command'] } },
+    { id:5,  label:'⇇ Fast ←',         fromKeyType:'key_code', fromKey:'keypad_5',        action:{ type:'mouse', mouseAction:'fast_left'  } },
+    { id:6,  label:'⇉ Fast →',         fromKeyType:'key_code', fromKey:'keypad_6',        action:{ type:'mouse', mouseAction:'fast_right' } },
+    { id:7,  label:'↑ Scroll Up',      fromKeyType:'key_code', fromKey:'keypad_7',        action:{ type:'mouse', mouseAction:'scroll_up'  } },
+    { id:8,  label:'↓ Scroll Down',    fromKeyType:'key_code', fromKey:'keypad_8',        action:{ type:'mouse', mouseAction:'scroll_down'} },
+    { id:9,  label:'🖱 Right Click',   fromKeyType:'key_code', fromKey:'keypad_9',        action:{ type:'mouse', mouseAction:'click_right'} },
+    { id:10, label:'🖱 Left Click',    fromKeyType:'key_code', fromKey:'keypad_0',        action:{ type:'mouse', mouseAction:'click_left' } },
+    { id:11, label:'⇈ Fast Up',        fromKeyType:'key_code', fromKey:'keypad_period',   action:{ type:'mouse', mouseAction:'fast_up'    } },
+    { id:12, label:'⇊ Fast Down',      fromKeyType:'key_code', fromKey:'keypad_enter',    action:{ type:'mouse', mouseAction:'fast_down'  } },
+    { id:13, label:'Play/Pause',        fromKeyType:'key_code', fromKey:'keypad_hyphen',   action:{ type:'media', mediaCode:'play_or_pause'} },
+    { id:14, label:'Mission Control',  fromKeyType:'key_code', fromKey:'keypad_plus',     action:{ type:'media', mediaCode:'mission_control'} },
+    { id:15, label:'⌘Space Spotlight', fromKeyType:'key_code', fromKey:'spacebar',        action:{ type:'key',   keyCode:'spacebar',      modifiers:['left_command'] } },
+    { id:16, label:'↓ Mouse Down',     fromKeyType:'key_code', fromKey:'down_arrow',      action:{ type:'mouse', mouseAction:'move_down'  } },
+    { id:17, label:'← Mouse Left',     fromKeyType:'key_code', fromKey:'left_arrow',      action:{ type:'mouse', mouseAction:'move_left'  } },
+    { id:18, label:'→ Mouse Right',    fromKeyType:'key_code', fromKey:'right_arrow',     action:{ type:'mouse', mouseAction:'move_right' } },
+    { id:19, label:'↑ Mouse Up',       fromKeyType:'key_code', fromKey:'up_arrow',        action:{ type:'mouse', mouseAction:'move_up'    } },
+    { id:20, label:'🖱 Left Click',    fromKeyType:'key_code', fromKey:'return_or_enter', action:{ type:'mouse', mouseAction:'click_left' } },
   ],
 };
 
@@ -2144,6 +2194,10 @@ function setActionType(type, existing) {
     document.getElementById('fAppName').value = existing?.appName || '';
   } else if (type === 'text') {
     document.getElementById('fText').value = existing?.text || '';
+  } else if (type === 'mouse') {
+    document.querySelectorAll('#mouseGrid .media-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.action === existing?.mouseAction);
+    });
   }
 }
 
@@ -2152,7 +2206,12 @@ function toggleMod(chip) {
 }
 
 function selectMedia(btn) {
-  document.querySelectorAll('.media-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#mediaGrid .media-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function selectMouse(btn) {
+  document.querySelectorAll('#mouseGrid .media-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
@@ -2184,6 +2243,9 @@ function saveKey() {
     k.action = { type: 'app', appName: document.getElementById('fAppName').value.trim() };
   } else if (currentActionType === 'text') {
     k.action = { type: 'text', text: document.getElementById('fText').value };
+  } else if (currentActionType === 'mouse') {
+    const active = document.querySelector('#mouseGrid .media-btn.active');
+    k.action = active ? { type: 'mouse', mouseAction: active.dataset.action } : null;
   }
 
   localStorage.setItem('macropad-keys', JSON.stringify(keys));
@@ -2226,6 +2288,24 @@ function buildActionTo(k) {
     return [{ shell_command: `open -a '${k.action.appName}'` }];
   } else if (type === 'text') {
     return k.action.text.split('').map(ch => ({ key_code: ch }));
+  } else if (type === 'mouse') {
+    const MOUSE_ACTIONS = {
+      move_up:      { mouse_key: { y: -1536 } },
+      move_down:    { mouse_key: { y:  1536 } },
+      move_left:    { mouse_key: { x: -1536 } },
+      move_right:   { mouse_key: { x:  1536 } },
+      fast_up:      { mouse_key: { y: -4096 } },
+      fast_down:    { mouse_key: { y:  4096 } },
+      fast_left:    { mouse_key: { x: -4096 } },
+      fast_right:   { mouse_key: { x:  4096 } },
+      click_left:   { pointing_button: 'button1' },
+      click_right:  { pointing_button: 'button2' },
+      scroll_up:    { mouse_key: { vertical_wheel: -32 } },
+      scroll_down:  { mouse_key: { vertical_wheel:  32 } },
+      scroll_left:  { mouse_key: { horizontal_wheel:  32 } },
+      scroll_right: { mouse_key: { horizontal_wheel: -32 } },
+    };
+    return [ MOUSE_ACTIONS[k.action.mouseAction] || MOUSE_ACTIONS.move_up ];
   }
   return null;
 }
