@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" width="900" height="500" style="font-family: system-ui, -apple-system, sans-serif;">
+  <defs>
+    <pattern id="dots2" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="1" fill="#1e293b"/>
+    </pattern>
+    <marker id="arr-b" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arr-d" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#475569"/>
+    </marker>
+    <marker id="arr-g" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#4ade80"/>
+    </marker>
+    <marker id="arr-y" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="500" fill="#0f172a"/>
+  <rect width="900" height="500" fill="url(#dots2)"/>
+
+  <!-- Title -->
+  <text x="450" y="32" text-anchor="middle" fill="#f1f5f9" font-size="15" font-weight="600" letter-spacing="0.5">Apply to Karabiner — Sequence</text>
+
+  <!-- ────────── Actor lifeline positions ──────────
+       Configurator JS  x=130
+       Rust Backend     x=330
+       Filesystem       x=560
+       Karabiner-Elems  x=780
+  -->
+
+  <!-- Actor boxes -->
+  <!-- Configurator JS -->
+  <rect x="52" y="50" width="156" height="42" rx="6" fill="#1e293b" stroke="#818cf8" stroke-width="1.5"/>
+  <text x="130" y="67" text-anchor="middle" fill="#818cf8" font-size="10" font-weight="700" letter-spacing="1">FRONTEND</text>
+  <text x="130" y="83" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="600">Configurator JS</text>
+
+  <!-- Rust Backend -->
+  <rect x="252" y="50" width="156" height="42" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="330" y="67" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="700" letter-spacing="1">BACKEND</text>
+  <text x="330" y="83" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="600">Rust Backend</text>
+
+  <!-- Filesystem -->
+  <rect x="482" y="50" width="156" height="42" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+  <text x="560" y="67" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" letter-spacing="1">FILESYSTEM</text>
+  <text x="560" y="83" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="600">~/.config/karabiner</text>
+
+  <!-- Karabiner-Elements -->
+  <rect x="702" y="50" width="160" height="42" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="782" y="67" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="700" letter-spacing="1">APP</text>
+  <text x="782" y="83" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="600">Karabiner-Elements</text>
+
+  <!-- Lifelines -->
+  <line x1="130" y1="92" x2="130" y2="470" stroke="#2d3f5e" stroke-width="1" stroke-dasharray="5,4"/>
+  <line x1="330" y1="92" x2="330" y2="470" stroke="#2d3f5e" stroke-width="1" stroke-dasharray="5,4"/>
+  <line x1="560" y1="92" x2="560" y2="470" stroke="#2d3f5e" stroke-width="1" stroke-dasharray="5,4"/>
+  <line x1="782" y1="92" x2="782" y2="470" stroke="#2d3f5e" stroke-width="1" stroke-dasharray="5,4"/>
+
+  <!-- ────────── Step 1: User clicks Apply ──────────
+       y = 130
+  -->
+  <rect x="118" y="122" width="24" height="220" rx="3" fill="#1e3a5f"/>
+
+  <!-- Step label -->
+  <text x="22" y="138" fill="#475569" font-size="9" font-weight="600">①</text>
+  <!-- Arrow: JS → Rust: install_profile(json) -->
+  <line x1="142" y1="134" x2="318" y2="134" stroke="#818cf8" stroke-width="1.5" marker-end="url(#arr-b)"/>
+  <rect x="180" y="121" width="100" height="16" rx="2" fill="#0f172a"/>
+  <text x="230" y="132" text-anchor="middle" fill="#818cf8" font-size="10" font-weight="600">install_profile(json)</text>
+
+  <!-- Step label -->
+  <text x="22" y="170" fill="#475569" font-size="9" font-weight="600">②</text>
+  <!-- Rust activation bar -->
+  <rect x="318" y="144" width="24" height="240" rx="3" fill="#1e3a5f"/>
+
+  <!-- Arrow: Rust → FS: read karabiner.json -->
+  <line x1="342" y1="166" x2="548" y2="166" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arr-b)"/>
+  <rect x="390" y="154" width="120" height="16" rx="2" fill="#0f172a"/>
+  <text x="450" y="165" text-anchor="middle" fill="#38bdf8" font-size="10">read karabiner.json</text>
+
+  <!-- Step label -->
+  <text x="22" y="196" fill="#475569" font-size="9" font-weight="600">③</text>
+  <!-- Arrow: FS → Rust: return JSON -->
+  <line x1="548" y1="192" x2="344" y2="192" stroke="#475569" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr-d)"/>
+  <rect x="390" y="180" width="106" height="16" rx="2" fill="#0f172a"/>
+  <text x="443" y="191" text-anchor="middle" fill="#94a3b8" font-size="10" font-style="italic">return JSON content</text>
+
+  <!-- Step label -->
+  <text x="22" y="230" fill="#475569" font-size="9" font-weight="600">④</text>
+  <!-- Arrow: Rust → FS: write timestamped backup -->
+  <line x1="342" y1="226" x2="548" y2="226" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arr-b)"/>
+  <rect x="365" y="213" width="160" height="16" rx="2" fill="#0f172a"/>
+  <text x="445" y="224" text-anchor="middle" fill="#38bdf8" font-size="10">write timestamped backup</text>
+
+  <!-- Step label -->
+  <text x="22" y="264" fill="#475569" font-size="9" font-weight="600">⑤</text>
+  <!-- Arrow: Rust → FS: patch + write karabiner.json -->
+  <line x1="342" y1="260" x2="548" y2="260" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#arr-b)"/>
+  <rect x="360" y="247" width="170" height="16" rx="2" fill="#0f172a"/>
+  <text x="445" y="258" text-anchor="middle" fill="#38bdf8" font-size="10">patch + write karabiner.json</text>
+
+  <!-- Step label -->
+  <text x="22" y="306" fill="#475569" font-size="9" font-weight="600">⑥</text>
+  <!-- FS activation bar -->
+  <rect x="548" y="155" width="24" height="120" rx="3" fill="#1e3a5f"/>
+
+  <!-- Arrow: Rust → Karabiner: karabiner_cli --reload -->
+  <line x1="342" y1="302" x2="770" y2="302" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arr-y)"/>
+  <rect x="480" y="289" width="178" height="16" rx="2" fill="#0f172a"/>
+  <text x="569" y="300" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600">karabiner_cli --reload</text>
+
+  <!-- Karabiner activation bar -->
+  <rect x="770" y="292" width="24" height="60" rx="3" fill="#2d1a00"/>
+
+  <!-- Step label -->
+  <text x="22" y="344" fill="#475569" font-size="9" font-weight="600">⑦</text>
+  <!-- Arrow: Karabiner → Rust: ack (dashed) -->
+  <line x1="770" y1="340" x2="344" y2="340" stroke="#475569" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr-d)"/>
+  <rect x="475" y="327" width="160" height="16" rx="2" fill="#0f172a"/>
+  <text x="555" y="338" text-anchor="middle" fill="#94a3b8" font-size="10" font-style="italic">profile active</text>
+
+  <!-- Step label -->
+  <text x="22" y="378" fill="#475569" font-size="9" font-weight="600">⑧</text>
+  <!-- Arrow: Rust → JS: Ok(()) -->
+  <line x1="318" y1="374" x2="144" y2="374" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr-g)"/>
+  <rect x="185" y="361" width="96" height="16" rx="2" fill="#0f172a"/>
+  <text x="233" y="372" text-anchor="middle" fill="#4ade80" font-size="10" font-style="italic">Ok(()) → show toast</text>
+
+  <!-- ────────── Legend strip ────────── -->
+  <rect x="0" y="448" width="900" height="52" fill="#070f1c"/>
+  <line x1="30" y1="474" x2="56" y2="474" stroke="#818cf8" stroke-width="1.5"/>
+  <text x="60" y="478" fill="#94a3b8" font-size="9">JS → Rust invoke</text>
+  <line x1="164" y1="474" x2="190" y2="474" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="194" y="478" fill="#94a3b8" font-size="9">Rust → Filesystem</text>
+  <line x1="314" y1="474" x2="340" y2="474" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="344" y="478" fill="#94a3b8" font-size="9">Rust → Karabiner reload</text>
+  <line x1="504" y1="474" x2="530" y2="474" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="534" y="478" fill="#94a3b8" font-size="9">return / success</text>
+  <line x1="660" y1="474" x2="686" y2="474" stroke="#475569" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="690" y="478" fill="#94a3b8" font-size="9">passive response</text>
+</svg>
