@@ -33,6 +33,11 @@
 
     --radius:    8px;
     --radius-sm: 5px;
+
+    --red:       #F87171;
+    --red-dim:   rgba(248,113,113,0.12);
+    --green:     #34D399;
+    --green-glow:rgba(52,211,153,0.25);
   }
 
   html, body {
@@ -77,7 +82,7 @@
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-rows: 52px 1fr 48px;
+    grid-template-rows: 52px auto 1fr 48px;
     height: 100vh;
   }
 
@@ -148,11 +153,93 @@
     gap: 8px;
   }
 
+  /* ─── PROFILE BAR ─── */
+  .profile-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 24px;
+    background: rgba(7,7,14,0.85);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+  }
+  .profile-bar-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .profile-select {
+    flex: 0 0 auto;
+    min-width: 160px;
+    max-width: 220px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    padding: 5px 10px;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237070A0'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    transition: border-color 0.15s;
+  }
+  .profile-select:focus { border-color: var(--amber); }
+  .profile-new-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .profile-name-input {
+    display: none;
+    background: var(--bg-elevated);
+    border: 1px solid var(--amber);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    padding: 5px 10px;
+    width: 160px;
+    outline: none;
+  }
+  .profile-name-input::placeholder { color: var(--text-muted); }
+  .profile-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .profile-active-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+    flex-shrink: 0;
+    box-shadow: 0 0 5px var(--amber-glow);
+  }
+  #btnDeleteProfile:not([disabled]):hover {
+    border-color: var(--red);
+    color: var(--red) !important;
+    background: var(--red-dim);
+  }
+  #btnDeleteProfile[disabled] {
+    opacity: 0.3;
+    cursor: not-allowed;
+    color: var(--text-muted) !important;
+  }
+
   /* ─── MAIN LAYOUT ─── */
   main {
     display: flex;
     flex-direction: row;
     overflow: hidden;
+    min-height: 0;
   }
 
   /* ─── PANEL RESIZE HANDLE ─── */
@@ -1283,6 +1370,22 @@
     </div>
   </header>
 
+  <!-- ─── PROFILE BAR ─── -->
+  <div class="profile-bar">
+    <div class="profile-active-dot"></div>
+    <span class="profile-bar-label">Profile</span>
+    <select class="profile-select" id="profileSelect" onchange="onProfileSelectChange(this.value)"></select>
+    <div class="profile-new-wrap">
+      <input type="text" class="profile-name-input" id="profileNameInput" placeholder="Profile name…" maxlength="40"
+             onkeydown="if(event.key==='Enter')confirmSaveProfile(); if(event.key==='Escape')cancelNewProfile();">
+    </div>
+    <button class="btn btn-ghost btn-sm" id="btnSaveProfile" onclick="promptSaveProfile()" title="Save current layout as a named profile">Save as…</button>
+    <button class="btn btn-ghost btn-sm" id="btnConfirmSave" style="display:none;border-color:var(--amber);color:var(--amber)" onclick="confirmSaveProfile()">Save</button>
+    <button class="btn btn-ghost btn-sm" id="btnCancelSave" style="display:none" onclick="cancelNewProfile()">Cancel</button>
+    <div class="profile-sep"></div>
+    <button class="btn btn-ghost btn-sm" id="btnDeleteProfile" onclick="deleteCurrentProfile()" title="Delete selected profile" style="color:var(--red-dim)">Delete</button>
+  </div>
+
   <!-- ─── MAIN ─── -->
   <main>
 
@@ -1579,6 +1682,136 @@ if (localStorage.getItem('macropad-schema') !== SCHEMA_VERSION) {
   localStorage.removeItem('macropad-keys');
   localStorage.setItem('macropad-schema', SCHEMA_VERSION);
 }
+
+// ─────────────────────────────────────────────────────
+// PROFILE MANAGEMENT
+// ─────────────────────────────────────────────────────
+const PROFILES_LS_KEY    = 'macropad-profiles';
+const ACTIVE_PROFILE_KEY = 'macropad-active-profile';
+const DEFAULT_PROFILE    = 'Default';
+
+function loadAllProfiles() {
+  try { return JSON.parse(localStorage.getItem(PROFILES_LS_KEY) || 'null') || {}; }
+  catch(e) { return {}; }
+}
+
+function saveAllProfiles(profiles) {
+  localStorage.setItem(PROFILES_LS_KEY, JSON.stringify(profiles));
+}
+
+function getActiveProfileName() {
+  return localStorage.getItem(ACTIVE_PROFILE_KEY) || DEFAULT_PROFILE;
+}
+
+function setActiveProfileName(name) {
+  localStorage.setItem(ACTIVE_PROFILE_KEY, name);
+}
+
+function renderProfileSelect() {
+  var sel = document.getElementById('profileSelect');
+  var profiles = loadAllProfiles();
+  var names = Object.keys(profiles);
+  // Always include Default first
+  if (!names.includes(DEFAULT_PROFILE)) names = [DEFAULT_PROFILE].concat(names);
+  else names = [DEFAULT_PROFILE].concat(names.filter(function(n){ return n !== DEFAULT_PROFILE; }));
+
+  var active = getActiveProfileName();
+  sel.innerHTML = names.map(function(n) {
+    return '<option value="' + n.replace(/"/g,'&quot;') + '"' + (n === active ? ' selected' : '') + '>' + n + '</option>';
+  }).join('');
+
+  // Delete button: disable for Default
+  var del = document.getElementById('btnDeleteProfile');
+  if (del) del.disabled = (active === DEFAULT_PROFILE);
+}
+
+function onProfileSelectChange(name) {
+  var profiles = loadAllProfiles();
+  var savedKeys = profiles[name] ? profiles[name].keys : null;
+  if (!savedKeys && name === DEFAULT_PROFILE) savedKeys = DEFAULT_KEYS.map(function(k){ return Object.assign({},k); });
+  if (!savedKeys) return;
+  keys = savedKeys.map(function(k){ return Object.assign({},k); });
+  localStorage.setItem('macropad-keys', JSON.stringify(keys));
+  setActiveProfileName(name);
+  renderProfileSelect();
+  deselectKey();
+  renderKeypad();
+  showToast('Loaded profile: ' + name);
+  TauriBridge.invoke('save_profile', { json: JSON.stringify(buildProfile()) }).catch(function(){});
+}
+
+function promptSaveProfile() {
+  var input = document.getElementById('profileNameInput');
+  var active = getActiveProfileName();
+  input.value = active === DEFAULT_PROFILE ? '' : active;
+  input.style.display = 'inline-block';
+  input.focus();
+  document.getElementById('btnSaveProfile').style.display = 'none';
+  document.getElementById('btnConfirmSave').style.display = 'inline-flex';
+  document.getElementById('btnCancelSave').style.display = 'inline-flex';
+}
+
+function confirmSaveProfile() {
+  var input = document.getElementById('profileNameInput');
+  var name = input.value.trim();
+  if (!name) { input.focus(); return; }
+
+  var profiles = loadAllProfiles();
+  // Ensure Default snapshot is always present
+  if (!profiles[DEFAULT_PROFILE]) {
+    profiles[DEFAULT_PROFILE] = { keys: DEFAULT_KEYS.map(function(k){ return Object.assign({},k); }), createdAt: Date.now() };
+  }
+  var isNew = !profiles[name];
+  profiles[name] = { keys: keys.map(function(k){ return Object.assign({},k); }), savedAt: Date.now() };
+  saveAllProfiles(profiles);
+  setActiveProfileName(name);
+  cancelNewProfile();
+  renderProfileSelect();
+  showToast((isNew ? 'Profile created: ' : 'Profile updated: ') + name);
+  TauriBridge.invoke('save_profile', { json: JSON.stringify(buildProfile()) }).catch(function(){});
+}
+
+function cancelNewProfile() {
+  document.getElementById('profileNameInput').style.display = 'none';
+  document.getElementById('btnSaveProfile').style.display = 'inline-flex';
+  document.getElementById('btnConfirmSave').style.display = 'none';
+  document.getElementById('btnCancelSave').style.display = 'none';
+}
+
+function deleteCurrentProfile() {
+  var active = getActiveProfileName();
+  if (active === DEFAULT_PROFILE) return;
+  if (!confirm('Delete profile "' + active + '"?')) return;
+  var profiles = loadAllProfiles();
+  delete profiles[active];
+  saveAllProfiles(profiles);
+  setActiveProfileName(DEFAULT_PROFILE);
+  // Load default keys
+  keys = DEFAULT_KEYS.map(function(k){ return Object.assign({},k); });
+  localStorage.setItem('macropad-keys', JSON.stringify(keys));
+  renderProfileSelect();
+  deselectKey();
+  renderKeypad();
+  showToast('Profile deleted: ' + active);
+}
+
+// Init: ensure Default profile snapshot exists, restore last active profile
+(function initProfiles() {
+  var profiles = loadAllProfiles();
+  if (!profiles[DEFAULT_PROFILE]) {
+    profiles[DEFAULT_PROFILE] = { keys: DEFAULT_KEYS.map(function(k){ return Object.assign({},k); }), createdAt: Date.now() };
+    saveAllProfiles(profiles);
+  }
+  var active = getActiveProfileName();
+  // Pre-seed macropad-keys so the let keys = ... declaration below reads the right profile
+  if (active !== DEFAULT_PROFILE && profiles[active]) {
+    localStorage.setItem('macropad-keys', JSON.stringify(
+      profiles[active].keys.map(function(k){ return Object.assign({},k); })
+    ));
+  }
+})();
+
+// ─────────────────────────────────────────────────────
 
 let keys = JSON.parse(localStorage.getItem('macropad-keys') || 'null') || DEFAULT_KEYS.map(k => ({...k}));
 let selectedId = null;
@@ -2410,6 +2643,7 @@ function init3DDrag() {
 // ─────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────
 renderKeypad();
+renderProfileSelect();
 </script>
 </body>
 </html>
